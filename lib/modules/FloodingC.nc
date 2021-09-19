@@ -5,9 +5,9 @@
 
 #include "../../includes/CommandMsg.h"
 
-module NeighborDiscoveryP
+module FloodingC
 {
-   provides interface NeighborDiscovery; // Declare our own interface
+   provides interface Flooding; // Declare our own interface
    uses interface Receive;
    uses interface Queue<message_t*>;
    uses interface Packet;
@@ -15,7 +15,11 @@ module NeighborDiscoveryP
 
 implementation
 {
+   components FloodingP;
+   Flooding = FloodingP.Flooding;
    /*
       Write the details of neighbor discovery / flooding / whatever
+      List of components we will use and how to wire them through
+      potentially other functions in our module
    */
 }

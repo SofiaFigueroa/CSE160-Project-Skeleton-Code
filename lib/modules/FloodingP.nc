@@ -5,19 +5,25 @@
 
 #include "../../includes/CommandMsg.h"
 
-module NeighborDiscoveryC
+module FloodingP
 {
-   provides interface NeighborDiscovery; // Declare our own interface
+   // uses interface <interface_name>
+
+   provides interface Flooding; // Declare our own interface
+   uses interface SimpleSend;
 }
 
 implementation
 {
    /*
       Write the details of neighbor discovery / flooding / whatever
+      How to CALL interfaces
+
+      how to call <interface_name>
    */
 
-   components NeighborDiscoveryP;
-   CommandHandler = NeighborDiscoveryP;
+   components FloodingP;
+   CommandHandler = FloodingP;
    // For example, CommandHandlerP.Receive -> Command Receive,
    // from components new AMReceiverC(AM_COMMANDMSG) as CommandReceive;
 }
