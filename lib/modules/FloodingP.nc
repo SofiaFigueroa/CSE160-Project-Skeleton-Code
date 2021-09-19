@@ -7,23 +7,22 @@
 
 module FloodingP
 {
-   // uses interface <interface_name>
-
-   provides interface Flooding; // Declare our own interface
-   uses interface SimpleSend;
+   provides interface Flooding; // Wire module to interface
+   uses interface SimpleSend; // Allows use of SimpleSend Interface
 }
 
+/*
+   Write the details of neighbor discovery / flooding / whatever
+   How to CALL interfaces
+   how to call <interface_name>
+   For example, CommandHandlerP.Receive -> Command Receive,
+   from components new AMReceiverC(AM_COMMANDMSG) as CommandReceive;
+
+   All commands provided by the interface are implemented here.
+*/
 implementation
 {
-   /*
-      Write the details of neighbor discovery / flooding / whatever
-      How to CALL interfaces
-
-      how to call <interface_name>
-   */
 
    components FloodingP;
    CommandHandler = FloodingP;
-   // For example, CommandHandlerP.Receive -> Command Receive,
-   // from components new AMReceiverC(AM_COMMANDMSG) as CommandReceive;
 }

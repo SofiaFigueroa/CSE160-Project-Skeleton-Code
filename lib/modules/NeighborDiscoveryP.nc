@@ -8,9 +8,13 @@
 module NeighborDiscoveryP
 {
    provides interface NeighborDiscovery; // Declare our own interface
-   uses interface Receive;
-   uses interface Queue<message_t*>;
-   uses interface Packet;
+
+   uses
+   {
+      interface Receive;
+      interface Queue<message_t*>
+      interface Packet;
+   }
 }
 
 implementation

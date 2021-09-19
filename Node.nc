@@ -22,6 +22,7 @@ module Node{
    uses interface SimpleSend as Sender;
 
    uses interface CommandHandler;
+
    uses interface Flooding;
    uses interface NeighborDiscovery;
 }
@@ -65,6 +66,7 @@ implementation{
       dbg(GENERAL_CHANNEL, "PING EVENT \n");
       makePack(&sendPackage, TOS_NODE_ID, destination, 0, 0, 0, payload, PACKET_MAX_PAYLOAD_SIZE);
       call Sender.send(sendPackage, destination);
+      logPack(&sendPackage);
    }
 
    event void CommandHandler.printNeighbors(){}

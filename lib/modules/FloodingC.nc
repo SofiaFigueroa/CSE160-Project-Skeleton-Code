@@ -5,21 +5,26 @@
 
 #include "../../includes/CommandMsg.h"
 
-module FloodingC
+/*
+   FloodingC sets up the Flooding module so that it can be
+   called by other files. Similar to a .h file. */
+configuration FloodingC
 {
    provides interface Flooding; // Declare our own interface
-   uses interface Receive;
-   uses interface Queue<message_t*>;
-   uses interface Packet;
 }
 
+/*
+   Write the details of neighbor discovery / flooding / whatever
+   List of components we will use and how to wire them through
+   potentially other functions in our module
+
+   These lines create a component, sample, and wire it to the
+   interface, Flooding.
+   */
 implementation
 {
-   components FloodingP;
-   Flooding = FloodingP.Flooding;
-   /*
-      Write the details of neighbor discovery / flooding / whatever
-      List of components we will use and how to wire them through
-      potentially other functions in our module
-   */
+   components FloodingP as Flooding;
+
+   
+
 }

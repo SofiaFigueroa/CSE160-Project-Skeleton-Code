@@ -12,12 +12,18 @@ module NeighborDiscoveryC
 
 implementation
 {
+   components new NeighborDiscoveryP();
+   NeighborDiscovery = NeighborDiscoveryP.NeighborDiscovery;
+   
+   NeighborDiscovery.send()
+   {
+      
+   }
+
    /*
       Write the details of neighbor discovery / flooding / whatever
    */
 
-   components NeighborDiscoveryP;
-   CommandHandler = NeighborDiscoveryP;
    // For example, CommandHandlerP.Receive -> Command Receive,
    // from components new AMReceiverC(AM_COMMANDMSG) as CommandReceive;
 }
