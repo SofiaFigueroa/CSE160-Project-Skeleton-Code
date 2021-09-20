@@ -15,15 +15,8 @@ implementation
    components new NeighborDiscoveryP();
    NeighborDiscovery = NeighborDiscoveryP.NeighborDiscovery;
    
-   NeighborDiscovery.send()
+   void NeighborDiscovery.send()
    {
       
    }
-
-   /*
-      Write the details of neighbor discovery / flooding / whatever
-   */
-
-   // For example, CommandHandlerP.Receive -> Command Receive,
-   // from components new AMReceiverC(AM_COMMANDMSG) as CommandReceive;
 }

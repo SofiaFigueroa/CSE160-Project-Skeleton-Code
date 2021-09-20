@@ -11,6 +11,7 @@
 configuration FloodingC
 {
    provides interface Flooding; // Declare our own interface
+   //uses interface SimpleSendC;
 }
 
 /*
@@ -23,8 +24,11 @@ configuration FloodingC
    */
 implementation
 {
-   components FloodingP as Flooding;
+   // components new FloodingP();
+   // Flooding = FloodingP.Flooding;
+   components FloodingP;
+   Flooding = FloodingP;
 
-   
-
+   components new SimpleSendC(AM_PACK) as FloodSender;
+   FloodingP.Sender -> FloodSender;
 }
