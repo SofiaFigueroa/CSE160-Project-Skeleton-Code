@@ -4,31 +4,22 @@
 */
 
 #include "../../includes/CommandMsg.h"
+#include "../../includes/packet.h"
 
-/*
-   FloodingC sets up the Flooding module so that it can be
-   called by other files. Similar to a .h file. */
 configuration FloodingC
 {
-   provides interface Flooding; // Declare our own interface
-   //uses interface SimpleSendC;
+   provides interface Flooding;  // Declare our interface
 }
 
-/*
-   Write the details of neighbor discovery / flooding / whatever
-   List of components we will use and how to wire them through
-   potentially other functions in our module
-
-   These lines create a component, sample, and wire it to the
-   interface, Flooding.
-   */
+// Details of Flooding. List of components we will use, and how to wire them.
 implementation
 {
-   // components new FloodingP();
-   // Flooding = FloodingP.Flooding;
+   // Initialize FloodingP component and declare it's the interface we're providing.
    components FloodingP;
    Flooding = FloodingP;
 
-   components new SimpleSendC(AM_PACK) as FloodSender;
-   FloodingP.Sender -> FloodSender;
+   // Declare that we will be using the component SimpleSendC and wiring Sender to it.
+   // We've declared we wanted to use Sender in FloodingP and here, we ensure connection.
+   components new SimpleSendC(AM_PACK);
+   FloodingP.Sender -> SimpleSendC;
 }

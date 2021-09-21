@@ -23,7 +23,7 @@ def main():
 
     # Start flooding
     s.runTime(1);
-    s.flood(1, 2, "Flood MSG");
+    s.flood();
     s.runTime(1);
 
 if __name__ == '__main__':
