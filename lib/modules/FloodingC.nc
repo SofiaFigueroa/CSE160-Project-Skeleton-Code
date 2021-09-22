@@ -22,4 +22,7 @@ implementation
    // We've declared we wanted to use Sender in FloodingP and here, we ensure connection.
    components new SimpleSendC(AM_PACK);
    FloodingP.Sender -> SimpleSendC;
+
+   components new ListC(pack, 64) as cache;
+   FloodingP.cache -> cache;
 }

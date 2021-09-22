@@ -3,4 +3,5 @@
 
 interface Flooding{
    command void flood(pack msg);
+   //void checkCacheForDuplicates();
 }
