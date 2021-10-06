@@ -21,7 +21,7 @@ typedef nx_struct pack{
 	nx_uint16_t src;
 	nx_uint16_t curr;
 	nx_uint16_t seq;	//Sequence Number
-	nx_uint8_t r; 		// reQuest(1) or Reply(2)
+	nx_uint8_t r; 		//none(0) or reQuest(1) or Reply(2)
 	nx_uint8_t TTL;		//Time to Live
 	nx_uint8_t protocol;
 	nx_uint8_t payload[PACKET_MAX_PAYLOAD_SIZE];
