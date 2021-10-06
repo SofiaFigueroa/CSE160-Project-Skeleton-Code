@@ -28,6 +28,8 @@ module Node{
 }
 
 implementation{
+   uint16_t TTL_INIT = 10;
+   uint16_t SEQ_IT = 0;
    pack sendPackage;
 
    // Prototypes
@@ -52,20 +54,38 @@ implementation{
 
    event message_t* Receive.receive(message_t* msg, void* payload, uint8_t len){
       dbg(GENERAL_CHANNEL, "Packet Received\n");
-      if(len==sizeof(pack)){
-         pack* myMsg=(pack*) payload;
-         dbg(GENERAL_CHANNEL, "Package Payload: %s\n", myMsg->payload);
+
+      if (len == sizeof(pack))
+      {
+         pack* myMsg = (pack*) payload;
+
+         if (myMsg->dest == TOS_NODE_ID)
+         {
+            dbg(GENERAL_CHANNEL, "Package Payload: %s\n", myMsg->payload);
+         }
+         else
+         {
+            dbg(GENERAL_CHANNEL, "Not mine, flooding.\n");
+            call Flooding.flood(*myMsg);
+         }
+
          return msg;
       }
-      dbg(GENERAL_CHANNEL, "Unknown Packet Type %d\n", len);
-      return msg;
+      else
+      {
+         dbg(GENERAL_CHANNEL, "Unknown Packet Type %d\n", len);
+      }
    }
 
    event void CommandHandler.ping(uint16_t destination, uint8_t *payload){
       dbg(GENERAL_CHANNEL, "PING EVENT \n");
-      makePack(&sendPackage, TOS_NODE_ID, destination, 0, 0, 0, payload, PACKET_MAX_PAYLOAD_SIZE);
-      call Sender.send(sendPackage, destination);
-      logPack(&sendPackage);
+      makePack(&sendPackage, TOS_NODE_ID, destination, TTL_INIT, 0, ++SEQ_IT, payload, PACKET_MAX_PAYLOAD_SIZE);
+      
+      // Broadcast Flood
+      dbg(GENERAL_CHANNEL, "Sequence Number of this Ping: %hhu\n", SEQ_IT);
+      call Flooding.flood(sendPackage);
+
+      // logPack(&sendPackage);
    }
 
    event void CommandHandler.printNeighbors(){}

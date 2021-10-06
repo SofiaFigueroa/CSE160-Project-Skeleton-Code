@@ -12,11 +12,9 @@ module NeighborDiscoveryC
 
 implementation
 {
-   components new NeighborDiscoveryP();
-   NeighborDiscovery = NeighborDiscoveryP.NeighborDiscovery;
+   components NeighborDiscoveryP;
+   NeighborDiscovery = NeighborDiscoveryP;
    
-   void NeighborDiscovery.send()
-   {
-      
-   }
+   components new SimpleSendC(AM_PACK);
+   NeighborDiscoveryP.Sender -> SimpleSendC;
 }

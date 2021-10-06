@@ -5,6 +5,7 @@
 
 #include "../../includes/CommandMsg.h"
 #include "../../includes/packet.h"
+#include "../../includes/protocol.h"
 
 module FloodingP
 {
@@ -16,54 +17,76 @@ module FloodingP
 // Details of Flooding; How to call interfaces.
 implementation
 {
-    int i = 0;
-    bool flag;
-    uint16_t cacheSize;
-    pack cachePos;
+    uint16_t i = 0;
+    pack fp; // floodPacket
+    pack cp; // cachePacket
+    pack *floodPackage = &fp;
+    pack *cachePackage = &cp;
 
-    void checkCacheForDuplicates(pack msg)
+    /*
+        True:   Duplicate Found
+        False:  No Duplicates Found
+    */
+    bool checkCacheForDuplicates(pack msg)
     {
-        // dbg(FLOODING_CHANNEL, "msg->src = %hhu. cache[0]->src = %hhu", msg.src, cache[0].src);
-        cacheSize = call cache.size();
-        cachePos = call cache.get(0);
-
-        for (i = 0; i < cacheSize; i++)
+        for (i; i < call cache.size(); i++)
         {
-            if (msg.src == cachePos.src)
+            cp = call cache.get(i);
+            if (floodPackage->seq == cachePackage->seq)
             {
-                dbg(FLOODING_CHANNEL, "Match found in cache!");
-                flag = FALSE;
+                dbg(FLOODING_CHANNEL, "Duplicate Found!\n");
+                return TRUE;
             }
+        }
 
-            if (i != 0) cachePos = call cache.get(i);
-        }
-            
-        if (flag)
+        call cache.pushback(fp);
+        return FALSE;
+    }
+
+    void decrementTTL()
+    {
+        floodPackage->TTL -= 1;
+    }
+
+    uint16_t getTTL()
+    {
+        return floodPackage->TTL;
+    }
+
+    bool readyToSend()
+    {
+        // Is this the Ping Source? Ignore other checks
+        if (floodPackage->protocol == PROTOCOL_PING)
         {
-            call cache.pushback(msg);
-            dbg(FLOODING_CHANNEL, "Made it here?");
+            floodPackage->protocol = PROTOCOL_PINGREPLY;
+            return TRUE;
         }
+
+        // Check TTL
+        decrementTTL();
+        if (getTTL() <= 0) return FALSE;
+
+        // Check Cache
+        if (checkCacheForDuplicates(fp)) return FALSE;
+
+        // Passed All Checks
+        return TRUE;
+    }
+    
+    // Debug Function
+    void checkSourceDestination(pack* msg)
+    {
+        dbg(FLOODING_CHANNEL, "Source Address: %hhu, Source Dest: %hhu\n", msg->src, msg->dest);
     }
 
     command void Flooding.flood(pack msg)
     {
-        typedef nx_struct FloodingHeader
-        {
-	        nx_uint16_t dest;
-	        nx_uint16_t src;
-	        nx_uint8_t payload[PACKET_MAX_PAYLOAD_SIZE];
-            nx_uint8_t a[0];
-        } FloodingHeader;
+        fp = msg;
 
-        if (msg.dest != TOS_NODE_ID)
-        {
-            dbg(FLOODING_CHANNEL,"I am %d. Packet is at %d. Destination is %d. Flooding\n", TOS_NODE_ID, msg.src, msg.dest);
-            call Sender.send(msg, msg.dest);
-            checkCacheForDuplicates(msg);
-        }
-        else
-        {
-            call Sender.send(msg, AM_BROADCAST_ADDR);
-        }
+        // Debug
+        // checkSourceDestination(floodPackage);
+    
+        // Check TTL, Cache, etc.
+        if (readyToSend()) call Sender.send(fp, AM_BROADCAST_ADDR);
     }
 }

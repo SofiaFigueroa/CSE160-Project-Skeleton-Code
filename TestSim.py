@@ -140,7 +140,7 @@ def main():
     s.addChannel(s.FLOODING_CHANNEL);
     s.addChannel(s.NEIGHBOR_CHANNEL);
     s.runTime(20);
-    s.ping(1, 2, "Hello, World");
+    s.ping(4, 2, "Hello, World");
     s.runTime(10);
     s.ping(4, 9, "Hello, World 2!");
     s.runTime(20);
