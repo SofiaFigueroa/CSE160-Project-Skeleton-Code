@@ -6,11 +6,11 @@
 #define PACKET_H
 
 
-# include "protocol.h"
+#include "protocol.h"
 #include "channels.h"
 
 enum{
-	PACKET_HEADER_LENGTH = 8,
+	PACKET_HEADER_LENGTH = 12,
 	PACKET_MAX_PAYLOAD_SIZE = 28 - PACKET_HEADER_LENGTH,
 	MAX_TTL = 15
 };
@@ -19,7 +19,9 @@ enum{
 typedef nx_struct pack{
 	nx_uint16_t dest;
 	nx_uint16_t src;
-	nx_uint16_t seq;		//Sequence Number
+	nx_uint16_t curr;
+	nx_uint16_t seq;	//Sequence Number
+	nx_uint8_t r; 		// reQuest(0) or Reply(1)
 	nx_uint8_t TTL;		//Time to Live
 	nx_uint8_t protocol;
 	nx_uint8_t payload[PACKET_MAX_PAYLOAD_SIZE];
@@ -32,8 +34,8 @@ typedef nx_struct pack{
  * 		pack *input = pack to be printed.
  */
 void logPack(pack *input){
-	dbg(GENERAL_CHANNEL, "Src: %hhu Dest: %hhu Seq: %hhu TTL: %hhu Protocol:%hhu  Payload: %s\n",
-	input->src, input->dest, input->seq, input->TTL, input->protocol, input->payload);
+	dbg(GENERAL_CHANNEL, "Curr: %hhu Src: %hhu Dest: %hhu Seq: %hhu Reply: %hhu TTL: %hhu Protocol:%hhu  Payload: %s\n",
+	input->curr, input->src, input->dest, input->seq, input->r, input->TTL, input->protocol, input->payload);
 }
 
 enum{

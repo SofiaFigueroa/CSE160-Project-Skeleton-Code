@@ -4,8 +4,9 @@
 */
 
 #include "../../includes/CommandMsg.h"
+#include "../../includes/packet.h"
 
-module NeighborDiscoveryC
+configuration NeighborDiscoveryC
 {
    provides interface NeighborDiscovery; // Declare our own interface
 }

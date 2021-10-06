@@ -18,13 +18,14 @@ module FloodingP
 implementation
 {
     uint16_t i = 0;
+    uint16_t highestSeq = 0;
     pack fp; // floodPacket
     pack cp; // cachePacket
     pack *floodPackage = &fp;
     pack *cachePackage = &cp;
 
     /*
-        True:   Duplicate Found
+        True:   Duplicate Sequence # Found
         False:  No Duplicates Found
     */
     bool checkCacheForDuplicates(pack msg)
@@ -43,6 +44,17 @@ implementation
         return FALSE;
     }
 
+    void setHighestSeq()
+    {
+        for (i; i < call cache.size(); i++)
+        {
+            cp = call cache.get(i);
+            if (cachePackage->seq > highestSeq) highestSeq = cachePackage->seq;
+        }
+
+        floodPackage->seq = highestSeq + 1;
+    }
+
     void decrementTTL()
     {
         floodPackage->TTL -= 1;
@@ -55,10 +67,11 @@ implementation
 
     bool readyToSend()
     {
-        // Is this the Ping Source? Ignore other checks
+        // Check Ping Source
         if (floodPackage->protocol == PROTOCOL_PING)
         {
             floodPackage->protocol = PROTOCOL_PINGREPLY;
+            setHighestSeq();
             return TRUE;
         }
 
@@ -82,11 +95,19 @@ implementation
     command void Flooding.flood(pack msg)
     {
         fp = msg;
+        if (readyToSend()) call Sender.send(fp, AM_BROADCAST_ADDR); // Checks TTL, Cache, etc
+        logPack(floodPackage);
+    }
+
+    // Use if neighbor is known WS = With Source->Dest
+    command void Flooding.floodWS(pack msg, uint16_t dest)
+    {
+        fp = msg;
 
         // Debug
         // checkSourceDestination(floodPackage);
     
         // Check TTL, Cache, etc.
-        if (readyToSend()) call Sender.send(fp, AM_BROADCAST_ADDR);
+        if (readyToSend()) call Sender.send(fp, dest);
     }
 }

@@ -24,16 +24,15 @@ module Node{
    uses interface CommandHandler;
 
    uses interface Flooding;
-   //uses interface NeighborDiscovery;
+   uses interface NeighborDiscovery;
 }
 
 implementation{
-   uint16_t TTL_INIT = 10;
-   uint16_t SEQ_IT = 0;
+   uint16_t SEQ_IT;
    pack sendPackage;
 
    // Prototypes
-   void makePack(pack *Package, uint16_t src, uint16_t dest, uint16_t TTL, uint16_t Protocol, uint16_t seq, uint8_t *payload, uint8_t length);
+   void makePack(pack *Package, uint16_t curr, uint16_t src, uint16_t dest, uint8_t r, uint16_t TTL, uint16_t Protocol, uint16_t seq, uint8_t *payload, uint8_t length);
 
    event void Boot.booted(){
       call AMControl.start();
@@ -66,6 +65,7 @@ implementation{
          else
          {
             dbg(GENERAL_CHANNEL, "Not mine, flooding.\n");
+            myMsg->curr = TOS_NODE_ID;
             call Flooding.flood(*myMsg);
          }
 
@@ -79,16 +79,20 @@ implementation{
 
    event void CommandHandler.ping(uint16_t destination, uint8_t *payload){
       dbg(GENERAL_CHANNEL, "PING EVENT \n");
-      makePack(&sendPackage, TOS_NODE_ID, destination, TTL_INIT, 0, ++SEQ_IT, payload, PACKET_MAX_PAYLOAD_SIZE);
+
+      // Make Packet: pack, curr, src, dest, r/q, TTL, protocol, seq#, payload, length
+      makePack(&sendPackage, TOS_NODE_ID, TOS_NODE_ID, destination, 1, MAX_TTL, 0, 0, payload, PACKET_MAX_PAYLOAD_SIZE);
       
       // Broadcast Flood
-      dbg(GENERAL_CHANNEL, "Sequence Number of this Ping: %hhu\n", SEQ_IT);
       call Flooding.flood(sendPackage);
-
-      // logPack(&sendPackage);
    }
 
-   event void CommandHandler.printNeighbors(){}
+   event void CommandHandler.printNeighbors()
+   {
+      dbg(NEIGHBOR_CHANNEL, "NEIGHBOR DUMP \n");
+      //makePack(&sendPackage, TOS_NODE_ID, destination, MAX_TTL, 0, SEQ_IT, payload, PACKET_MAX_PAYLOAD_SIZE);
+      //Call Flooding.flood, but do not broadcast
+   }
 
    event void CommandHandler.printRouteTable(){}
 
@@ -104,12 +108,14 @@ implementation{
 
    event void CommandHandler.setAppClient(){}
 
-   void makePack(pack *Package, uint16_t src, uint16_t dest, uint16_t TTL, uint16_t protocol, uint16_t seq, uint8_t* payload, uint8_t length){
+   void makePack(pack *Package, uint16_t curr, uint16_t src, uint16_t dest, uint8_t r, uint16_t TTL, uint16_t protocol, uint16_t seq, uint8_t* payload, uint8_t length){
+      Package->curr = curr;
       Package->src = src;
       Package->dest = dest;
       Package->TTL = TTL;
       Package->seq = seq;
       Package->protocol = protocol;
+      Package->r = r;
       memcpy(Package->payload, payload, length);
    }
 }
