@@ -41,6 +41,7 @@ implementation
         }
 
         call cache.pushback(fp);
+        dbg(FLOODING_CHANNEL, "Adding to cache!\n");
         return FALSE;
     }
 
@@ -68,7 +69,7 @@ implementation
     bool readyToSend()
     {
         // Check Ping Source
-        if (floodPackage->protocol == PROTOCOL_PING)
+        if (floodPackage->src == TOS_NODE_ID)
         {
             floodPackage->protocol = PROTOCOL_PINGREPLY;
             setHighestSeq();

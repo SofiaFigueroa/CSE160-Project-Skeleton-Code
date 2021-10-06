@@ -9,10 +9,9 @@ module NeighborDiscoveryP
 {
    provides interface NeighborDiscovery; // Declare our own interface
    uses interface SimpleSend as Sender;
+   uses interface Flooding as Flooding;
 }
 
-implementation
-{
    /*
       This means having your own neighbor discovery
       header information that should include:
@@ -24,8 +23,48 @@ implementation
          –Neighbor address
          –Quality of the link(percentage)
          –Active neighbor (yes/no) */
+
+implementation
+{
+   pack ndp; // neighborDiscoveryPacket
+   pack *neighborPacket = &ndp;
+   uint16_t previousSender;
+
    command void NeighborDiscovery.send(pack msg, uint16_t dest)
    {
       
+   }
+
+   uint16_t getPreviousSender()
+   {
+      return neighborPacket->curr;      
+   }
+
+   void setCurr()
+   {
+      neighborPacket->curr = TOS_NODE_ID;
+   }
+
+   // 0 = Ping, 1 = Request, 2 = Reply
+   void setRQ(uint16_t value)
+   {
+      neighborPacket->r = value;
+   }
+
+   command void NeighborDiscovery.reply(pack msg)
+   {
+      ndp = msg;
+      previousSender = getPreviousSender();
+      setCurr();
+
+      // Log that we are sending it back to the previous sender.
+      dbg(NEIGHBOR_CHANNEL, "Replying back to %d, my neighbor.\n", previousSender);
+      setRQ(2);
+      call Flooding.floodWS(ndp, previousSender);
+
+      // Send it along as well
+      dbg(NEIGHBOR_CHANNEL, "Reply sent, now flooding.\n");
+      setRQ(1);
+      call Flooding.flood(ndp);
    }
 }

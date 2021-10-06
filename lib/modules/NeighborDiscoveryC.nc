@@ -18,4 +18,7 @@ implementation
    
    components new SimpleSendC(AM_PACK);
    NeighborDiscoveryP.Sender -> SimpleSendC;
+
+   components FloodingC;
+   NeighborDiscoveryP.Flooding -> FloodingC;
 }

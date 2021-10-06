@@ -31,6 +31,10 @@ implementation{
    uint16_t SEQ_IT;
    pack sendPackage;
 
+   uint16_t temp;
+   uint8_t nd = 99;
+   uint8_t *nd_payload = &nd;
+
    // Prototypes
    void makePack(pack *Package, uint16_t curr, uint16_t src, uint16_t dest, uint8_t r, uint16_t TTL, uint16_t Protocol, uint16_t seq, uint8_t *payload, uint8_t length);
 
@@ -58,15 +62,45 @@ implementation{
       {
          pack* myMsg = (pack*) payload;
 
-         if (myMsg->dest == TOS_NODE_ID)
+         // Handle Neighbor Discovery Requests/Replies
+         switch (myMsg->r)
          {
-            dbg(GENERAL_CHANNEL, "Package Payload: %s\n", myMsg->payload);
-         }
-         else
-         {
-            dbg(GENERAL_CHANNEL, "Not mine, flooding.\n");
-            myMsg->curr = TOS_NODE_ID;
-            call Flooding.flood(*myMsg);
+            case 1:
+               dbg(NEIGHBOR_CHANNEL, "Request Received \n");
+
+               if (myMsg->curr == TOS_NODE_ID)
+               {
+                  break; // Drop Packet
+               }
+
+               // Send a reply directly back.
+               call NeighborDiscovery.reply(*myMsg);
+
+               // Foreword message along
+               dbg(NEIGHBOR_CHANNEL, "Flooding \n");
+               call Flooding.flood(*myMsg);
+
+               // Forward Neighbor Discovery to other nodes.
+               // if neighbor discovery is empty, broadcast to all, otherwise broadcast to known neighbors
+
+               break;
+            case 2:
+               dbg(NEIGHBOR_CHANNEL, "Reply Received \n");
+               dbg(NEIGHBOR_CHANNEL, "%hhu is my neighbor \n", myMsg->curr);
+               break;
+            default:
+               if (myMsg->dest == TOS_NODE_ID)
+               {
+                  dbg(GENERAL_CHANNEL, "Package Payload: %s\n", myMsg->payload);
+               }
+               else
+               {
+                  dbg(GENERAL_CHANNEL, "Not mine, flooding.\n");
+                  myMsg->curr = TOS_NODE_ID;
+                  call Flooding.flood(*myMsg);
+               }
+
+               break;
          }
 
          return msg;
@@ -81,7 +115,7 @@ implementation{
       dbg(GENERAL_CHANNEL, "PING EVENT \n");
 
       // Make Packet: pack, curr, src, dest, r/q, TTL, protocol, seq#, payload, length
-      makePack(&sendPackage, TOS_NODE_ID, TOS_NODE_ID, destination, 1, MAX_TTL, 0, 0, payload, PACKET_MAX_PAYLOAD_SIZE);
+      makePack(&sendPackage, TOS_NODE_ID, TOS_NODE_ID, destination, 0, MAX_TTL, 0, 0, payload, PACKET_MAX_PAYLOAD_SIZE);
       
       // Broadcast Flood
       call Flooding.flood(sendPackage);
@@ -90,8 +124,12 @@ implementation{
    event void CommandHandler.printNeighbors()
    {
       dbg(NEIGHBOR_CHANNEL, "NEIGHBOR DUMP \n");
-      //makePack(&sendPackage, TOS_NODE_ID, destination, MAX_TTL, 0, SEQ_IT, payload, PACKET_MAX_PAYLOAD_SIZE);
-      //Call Flooding.flood, but do not broadcast
+
+      // Make Packet: pack, curr, src, dest, r/q, TTL, protocol, seq#, payload, length
+      makePack(&sendPackage, TOS_NODE_ID, TOS_NODE_ID, AM_BROADCAST_ADDR, 1, MAX_TTL, 0, 0, nd_payload, PACKET_MAX_PAYLOAD_SIZE);
+
+      // Call Flooding.flood, but do not broadcast
+      call Flooding.flood(sendPackage);
    }
 
    event void CommandHandler.printRouteTable(){}
