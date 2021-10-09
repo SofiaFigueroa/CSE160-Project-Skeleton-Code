@@ -32,7 +32,7 @@ implementation{
    pack sendPackage;
 
    uint16_t temp;
-   uint8_t nd = 99;
+   uint8_t nd = 0;
    uint8_t *nd_payload = &nd;
 
    // Prototypes
@@ -68,25 +68,12 @@ implementation{
             case 1:
                dbg(NEIGHBOR_CHANNEL, "Request Received \n");
 
-               if (myMsg->curr == TOS_NODE_ID)
-               {
-                  break; // Drop Packet
-               }
-
                // Send a reply directly back.
                call NeighborDiscovery.reply(*myMsg);
-
-               // Foreword message along
-               dbg(NEIGHBOR_CHANNEL, "Flooding \n");
-               call Flooding.flood(*myMsg);
-
-               // Forward Neighbor Discovery to other nodes.
-               // if neighbor discovery is empty, broadcast to all, otherwise broadcast to known neighbors
-
                break;
             case 2:
-               dbg(NEIGHBOR_CHANNEL, "Reply Received \n");
-               dbg(NEIGHBOR_CHANNEL, "%hhu is my neighbor \n", myMsg->curr);
+               dbg(NEIGHBOR_CHANNEL, "\nReply Received \n");
+               dbg(NEIGHBOR_CHANNEL, "%hhu is my neighbor. I will somehow log this information.\n", myMsg->curr);
                break;
             default:
                if (myMsg->dest == TOS_NODE_ID)
@@ -130,6 +117,8 @@ implementation{
 
       // Call Flooding.flood, but do not broadcast
       call Flooding.flood(sendPackage);
+
+      
    }
 
    event void CommandHandler.printRouteTable(){}

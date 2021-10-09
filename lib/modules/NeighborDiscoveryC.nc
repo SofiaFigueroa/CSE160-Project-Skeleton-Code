@@ -21,4 +21,7 @@ implementation
 
    components FloodingC;
    NeighborDiscoveryP.Flooding -> FloodingC;
+
+   components new ListC(uint16_t, 64) as cache;
+   NeighborDiscoveryP.cache -> cache;
 }

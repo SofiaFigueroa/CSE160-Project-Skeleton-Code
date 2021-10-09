@@ -76,9 +76,17 @@ implementation
             return TRUE;
         }
 
+        if (floodPackage->r == 1)
+        {
+            decrementTTL();
+            if (getTTL() < 0 || getTTL() > MAX_TTL) return FALSE;
+
+            return TRUE;
+        }
+
         // Check TTL
         decrementTTL();
-        if (getTTL() <= 0) return FALSE;
+        if (getTTL() <= 0 || getTTL() > MAX_TTL) return FALSE;
 
         // Check Cache
         if (checkCacheForDuplicates(fp)) return FALSE;
@@ -97,6 +105,8 @@ implementation
     {
         fp = msg;
         if (readyToSend()) call Sender.send(fp, AM_BROADCAST_ADDR); // Checks TTL, Cache, etc
+        dbg(FLOODING_CHANNEL, "Destination 1:\n");
+    
         logPack(floodPackage);
     }
 
@@ -106,9 +116,11 @@ implementation
         fp = msg;
 
         // Debug
-        // checkSourceDestination(floodPackage);
+        //checkSourceDestination(floodPackage);
     
         // Check TTL, Cache, etc.
         if (readyToSend()) call Sender.send(fp, dest);
+        dbg(FLOODING_CHANNEL, "Destination 2: %d\n", dest);
+        logPack(floodPackage);
     }
 }

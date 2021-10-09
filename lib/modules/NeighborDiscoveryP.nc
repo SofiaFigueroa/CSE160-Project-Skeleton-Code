@@ -10,6 +10,7 @@ module NeighborDiscoveryP
    provides interface NeighborDiscovery; // Declare our own interface
    uses interface SimpleSend as Sender;
    uses interface Flooding as Flooding;
+   uses interface List<uint16_t> as cache;
 }
 
    /*
@@ -26,8 +27,12 @@ module NeighborDiscoveryP
 
 implementation
 {
+   uint16_t i = 0;
    pack ndp; // neighborDiscoveryPacket
    pack *neighborPacket = &ndp;
+   //pack cp;
+   //pack *cachePacket = &cp;
+   uint16_t cacheTemp;
    uint16_t previousSender;
 
    command void NeighborDiscovery.send(pack msg, uint16_t dest)
@@ -46,7 +51,7 @@ implementation
    }
 
    // 0 = Ping, 1 = Request, 2 = Reply
-   void setRQ(uint16_t value)
+   void setRQ(uint8_t value)
    {
       neighborPacket->r = value;
    }
@@ -57,10 +62,46 @@ implementation
       previousSender = getPreviousSender();
       setCurr();
 
+      // Check if we've already received something from them
+      for (i = 0; i < call cache.size(); i++)
+      {
+         cacheTemp = call cache.get(i);
+         if(cacheTemp == previousSender)
+         {
+            // We've already received something from them
+            dbg(NEIGHBOR_CHANNEL, "I am %d. My neighbors currently are: ", TOS_NODE_ID);
+
+            for (i = 0; i < call cache.size(); i++)
+            {
+               cacheTemp = call cache.get(i);
+               dbg(NEIGHBOR_CHANNEL, "%d, \n", cacheTemp);
+            }
+            
+            
+            return;
+         }
+
+         //dbg(NEIGHBOR_CHANNEL, "cache: %d, previousSender: %d\n", cacheTemp, previousSender);
+      }
+
+      call cache.pushback(previousSender);
+
+      // dbg(NEIGHBOR_CHANNEL, "I am %d. My neighbors currently are: ", TOS_NODE_ID);
+
+      // for (i = 0; i < call cache.size(); i++)
+      // {
+      //    cacheTemp = call cache.get(i);
+      //    dbg(NEIGHBOR_CHANNEL, "%d, ", cacheTemp);
+      // }
+
+      dbg(NEIGHBOR_CHANNEL, "\n");
+
       // Log that we are sending it back to the previous sender.
       dbg(NEIGHBOR_CHANNEL, "Replying back to %d, my neighbor.\n", previousSender);
       setRQ(2);
-      call Flooding.floodWS(ndp, previousSender);
+      //call Flooding.floodWS(ndp, previousSender);
+      call Sender.send(ndp, previousSender);
+      logPack(neighborPacket);
 
       // Send it along as well
       dbg(NEIGHBOR_CHANNEL, "Reply sent, now flooding.\n");
