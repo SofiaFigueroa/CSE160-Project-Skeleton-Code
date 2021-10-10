@@ -8,46 +8,58 @@
 module NeighborDiscoveryP
 {
    provides interface NeighborDiscovery; // Declare our own interface
-   uses interface SimpleSend as Sender;
-   uses interface Flooding as Flooding;
-   uses interface List<uint16_t> as cache;
+   
+   uses
+   {
+      interface SimpleSend as Sender;
+      interface Flooding as Flooding;
+      interface List<uint32_t> as cache;
+      interface Hashmap<uint32_t> as neighborTable;
+   }
 }
 
-   /*
-      This means having your own neighbor discovery
-      header information that should include:
-         –Request or Reply field
-         –Monotonically increasing sequence number to uniquely identify the packet
-         –Source address information can be obtained from the link layer
+/*
+   This means having your own neighbor discovery
+   header information that should include:
+      –Request or Reply field
+      –Monotonically increasing sequence number to uniquely identify the packet
+      –Source address information can be obtained from the link layer
 
-      You should have a neighbor table with three (3) fields:
-         –Neighbor address
-         –Quality of the link(percentage)
-         –Active neighbor (yes/no) */
+   You should have a neighbor table with three (3) fields:
+      –Neighbor address
+      –Quality of the link(percentage)
+      –Active neighbor (yes/no)
+*/
 
 implementation
 {
+   // Iterator
    uint16_t i = 0;
-   pack ndp; // neighborDiscoveryPacket
+   
+   // This Module's Neighbor Packet
+   pack ndp;
    pack *neighborPacket = &ndp;
-   //pack cp;
-   //pack *cachePacket = &cp;
+   
+   // Temporary Variables
    uint16_t cacheTemp;
    uint16_t previousSender;
 
-   command void NeighborDiscovery.send(pack msg, uint16_t dest)
+   /* 2D Neighbor Table:
+    * 3 Rows: 0=Neighbor Address, 1=Quality of Link, 2=Active Neighbor (0/1)
+    * 16 Columns: Can be changed for number of nodes
+    */
+   uint16_t neighborTable[3][16] = {0};
+
+   command void NeighborDiscovery.send(pack msg, uint16_t dest) {}
+
+   uint16_t getPrevHop()
    {
-      
+      return neighborPacket->curr;  // Caches previous hop
    }
 
-   uint16_t getPreviousSender()
+   void setCurrHop()
    {
-      return neighborPacket->curr;      
-   }
-
-   void setCurr()
-   {
-      neighborPacket->curr = TOS_NODE_ID;
+      neighborPacket->curr = TOS_NODE_ID; // Sets current hop
    }
 
    // 0 = Ping, 1 = Request, 2 = Reply
@@ -56,50 +68,53 @@ implementation
       neighborPacket->r = value;
    }
 
+   command void NeighborDiscovery.neighborDump()
+   {
+      // We've already received something from them
+      dbg(GENERAL_CHANNEL, "I am %d. My neighbors are:\n", TOS_NODE_ID);
+
+      for (i = 0; i < 16; i++)
+      {
+         if (neighborTable[0][i] != 0)
+         {
+            dbg(GENERAL_CHANNEL, "%d\n", neighborTable[0][i]);
+         }
+      }      
+   }
+
+   bool checkForDuplicates()
+   {
+      for (i = 0; i < 16; i++)
+      {
+         if (previousSender == neighborTable[0][i])
+         {
+            //dbg(NEIGHBOR_CHANNEL, "Prev: %d, Table: %d\n", previousSender, neighborTable[0][i]);
+            // neighborDump(); // Debug
+            return TRUE;
+         }
+      }
+
+      return FALSE;
+   }
+
    command void NeighborDiscovery.reply(pack msg)
    {
       ndp = msg;
-      previousSender = getPreviousSender();
-      setCurr();
+      previousSender = getPrevHop();
+      setCurrHop();
 
-      // Check if we've already received something from them
-      for (i = 0; i < call cache.size(); i++)
+      // IF duplicate, drop packet
+      if (checkForDuplicates())
       {
-         cacheTemp = call cache.get(i);
-         if(cacheTemp == previousSender)
-         {
-            // We've already received something from them
-            dbg(NEIGHBOR_CHANNEL, "I am %d. My neighbors currently are: ", TOS_NODE_ID);
-
-            for (i = 0; i < call cache.size(); i++)
-            {
-               cacheTemp = call cache.get(i);
-               dbg(NEIGHBOR_CHANNEL, "%d, \n", cacheTemp);
-            }
-            
-            
-            return;
-         }
-
-         //dbg(NEIGHBOR_CHANNEL, "cache: %d, previousSender: %d\n", cacheTemp, previousSender);
+         dbg (NEIGHBOR_CHANNEL, "Duplicate found!\n");
+         return;
       }
 
-      call cache.pushback(previousSender);
-
-      // dbg(NEIGHBOR_CHANNEL, "I am %d. My neighbors currently are: ", TOS_NODE_ID);
-
-      // for (i = 0; i < call cache.size(); i++)
-      // {
-      //    cacheTemp = call cache.get(i);
-      //    dbg(NEIGHBOR_CHANNEL, "%d, ", cacheTemp);
-      // }
-
-      dbg(NEIGHBOR_CHANNEL, "\n");
+      neighborTable[0][previousSender] = previousSender;
 
       // Log that we are sending it back to the previous sender.
       dbg(NEIGHBOR_CHANNEL, "Replying back to %d, my neighbor.\n", previousSender);
       setRQ(2);
-      //call Flooding.floodWS(ndp, previousSender);
       call Sender.send(ndp, previousSender);
       logPack(neighborPacket);
 

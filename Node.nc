@@ -25,6 +25,9 @@ module Node{
 
    uses interface Flooding;
    uses interface NeighborDiscovery;
+
+   uses interface Timer<TMilli> as NeighborTimer;
+   
 }
 
 implementation{
@@ -40,8 +43,23 @@ implementation{
 
    event void Boot.booted(){
       call AMControl.start();
+      //call NeighborTimer.startPeriodic(100000);
 
       dbg(GENERAL_CHANNEL, "Booted\n");
+
+      // Make Packet: pack, curr, src, dest, r/q, TTL, protocol, seq#, payload, length
+      makePack(&sendPackage, TOS_NODE_ID, TOS_NODE_ID, AM_BROADCAST_ADDR, 1, MAX_TTL, 0, 0, nd_payload, PACKET_MAX_PAYLOAD_SIZE);
+      
+      //Call Flooding.flood, but do not broadcast
+      call Flooding.flood(sendPackage);
+   }
+
+   event void NeighborTimer.fired()
+   {
+      // Make Packet: pack, curr, src, dest, r/q, TTL, protocol, seq#, payload, length
+      makePack(&sendPackage, TOS_NODE_ID, TOS_NODE_ID, AM_BROADCAST_ADDR, 1, MAX_TTL, 0, 0, nd_payload, PACKET_MAX_PAYLOAD_SIZE);
+      // Call Flooding.flood, but do not broadcast
+      call Flooding.flood(sendPackage);
    }
 
    event void AMControl.startDone(error_t err){
@@ -66,14 +84,14 @@ implementation{
          switch (myMsg->r)
          {
             case 1:
-               dbg(NEIGHBOR_CHANNEL, "Request Received \n");
+               //dbg(NEIGHBOR_CHANNEL, "Request Received \n");
 
                // Send a reply directly back.
                call NeighborDiscovery.reply(*myMsg);
                break;
             case 2:
-               dbg(NEIGHBOR_CHANNEL, "\nReply Received \n");
-               dbg(NEIGHBOR_CHANNEL, "%hhu is my neighbor. I will somehow log this information.\n", myMsg->curr);
+               //dbg(NEIGHBOR_CHANNEL, "Reply Received \n");
+               //dbg(NEIGHBOR_CHANNEL, "%hhu is my neighbor. I will somehow log this information.\n", myMsg->curr);
                break;
             default:
                if (myMsg->dest == TOS_NODE_ID)
@@ -111,14 +129,7 @@ implementation{
    event void CommandHandler.printNeighbors()
    {
       dbg(NEIGHBOR_CHANNEL, "NEIGHBOR DUMP \n");
-
-      // Make Packet: pack, curr, src, dest, r/q, TTL, protocol, seq#, payload, length
-      makePack(&sendPackage, TOS_NODE_ID, TOS_NODE_ID, AM_BROADCAST_ADDR, 1, MAX_TTL, 0, 0, nd_payload, PACKET_MAX_PAYLOAD_SIZE);
-
-      // Call Flooding.flood, but do not broadcast
-      call Flooding.flood(sendPackage);
-
-      
+      call NeighborDiscovery.neighborDump();
    }
 
    event void CommandHandler.printRouteTable(){}

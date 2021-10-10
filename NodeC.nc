@@ -37,4 +37,7 @@ implementation {
     components NeighborDiscoveryC;
     Node.NeighborDiscovery -> NeighborDiscoveryC;
 
+    components new TimerMilliC() as NeighborTimer;
+    Node.NeighborTimer -> NeighborTimer;
+
 }

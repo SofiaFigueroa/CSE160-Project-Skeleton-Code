@@ -137,14 +137,19 @@ def main():
     s.bootAll();
     s.addChannel(s.COMMAND_CHANNEL);
     s.addChannel(s.GENERAL_CHANNEL);
-    s.addChannel(s.FLOODING_CHANNEL);
-    s.addChannel(s.NEIGHBOR_CHANNEL);
-    s.runTime(20);
+    #s.addChannel(s.FLOODING_CHANNEL);
+    #s.addChannel(s.NEIGHBOR_CHANNEL);
+    s.runTime(100);
     #s.ping(4, 8, "Hello, World");
     #s.runTime(10);
     #s.ping(9, 3, "Hello, World 2!");
     #s.runTime(20);
-    s.neighborDMP(5);
+    #s.neighborDMP(0);
+    
+    for i in range(10):
+        s.neighborDMP(i);
+        s.runTime(10);
+
     s.runTime(20);
 
 if __name__ == '__main__':

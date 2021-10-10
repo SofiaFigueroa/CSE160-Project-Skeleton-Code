@@ -51,7 +51,7 @@ implementation
         {
             cp = call cache.get(i);
             if (cachePackage->seq > highestSeq) highestSeq = cachePackage->seq;
-        }
+        w}
 
         floodPackage->seq = highestSeq + 1;
     }
@@ -105,7 +105,7 @@ implementation
     {
         fp = msg;
         if (readyToSend()) call Sender.send(fp, AM_BROADCAST_ADDR); // Checks TTL, Cache, etc
-        dbg(FLOODING_CHANNEL, "Destination 1:\n");
+        //dbg(FLOODING_CHANNEL, "Destination 1:\n");
     
         logPack(floodPackage);
     }
