@@ -40,4 +40,7 @@ implementation {
     components new TimerMilliC() as NeighborTimer;
     Node.NeighborTimer -> NeighborTimer;
 
+    components RoutingC;
+    Node.Routing -> RoutingC;
+
 }

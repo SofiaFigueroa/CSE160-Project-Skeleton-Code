@@ -25,6 +25,7 @@ module Node{
 
    uses interface Flooding;
    uses interface NeighborDiscovery;
+   uses interface Routing;
 
    uses interface Timer<TMilli> as NeighborTimer;
    
@@ -52,6 +53,7 @@ implementation{
       
       //Call Flooding.flood, but do not broadcast
       call Flooding.flood(sendPackage);
+      call Routing.dumpTable();
    }
 
    event void NeighborTimer.fired()

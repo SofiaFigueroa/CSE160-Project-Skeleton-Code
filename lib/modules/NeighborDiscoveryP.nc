@@ -45,10 +45,11 @@ implementation
    uint16_t previousSender;
 
    /* 2D Neighbor Table:
-    * 3 Rows: 0=Neighbor Address, 1=Quality of Link, 2=Active Neighbor (0/1)
-    * 16 Columns: Can be changed for number of nodes
+    * 3 Columns: 0=Neighbor Address, 1=Quality of Link, 2=Active Neighbor (0/1)
+    * 16 Rows: Can be changed for number of nodes
     */
    uint16_t neighborTable[3][16] = {0};
+   uint16_t neighborList[16];
 
    command void NeighborDiscovery.send(pack msg, uint16_t dest) {}
 
@@ -79,8 +80,12 @@ implementation
          {
             dbg(GENERAL_CHANNEL, "%d\n", neighborTable[0][i]);
          }
-      }      
+      }    
+
+      return;  
    }
+
+   command int[] NeighborDiscovery.getNeighbors() {}
 
    bool checkForDuplicates()
    {
@@ -89,7 +94,7 @@ implementation
          if (previousSender == neighborTable[0][i])
          {
             //dbg(NEIGHBOR_CHANNEL, "Prev: %d, Table: %d\n", previousSender, neighborTable[0][i]);
-            // neighborDump(); // Debug
+            //neighborDump(); // Debug
             return TRUE;
          }
       }

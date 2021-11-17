@@ -51,7 +51,7 @@ implementation
         {
             cp = call cache.get(i);
             if (cachePackage->seq > highestSeq) highestSeq = cachePackage->seq;
-        w}
+        }
 
         floodPackage->seq = highestSeq + 1;
     }
