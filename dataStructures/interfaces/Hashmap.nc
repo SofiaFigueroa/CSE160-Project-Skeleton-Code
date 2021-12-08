@@ -7,7 +7,8 @@
  * 
  */
 
-interface Hashmap<t>{
+interface Hashmap<t>
+{
    command void insert(uint32_t key, t input);
    command void remove(uint32_t key);
    command t get(uint32_t key);

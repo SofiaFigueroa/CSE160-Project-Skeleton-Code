@@ -23,7 +23,7 @@ implementation
    components new SimpleSendC(AM_PACK);
    FloodingP.Sender -> SimpleSendC;
 
-   // Cache shouldn't contain more than 64 sequences in it.
-   components new ListC(pack, 64) as cache;
-   FloodingP.cache -> cache;
+   // Cache shouldn't contain more than MAX_NODES sequences in it.
+   components new HashmapC(uint16_t, MAX_NODES) as seqCache;
+   FloodingP.seqCache -> seqCache;
 }

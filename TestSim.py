@@ -132,26 +132,48 @@ class TestSim:
 def main():
     s = TestSim();
     s.runTime(10);
-    s.loadTopo("example.topo");
+
+    # s.loadTopo("long_line.topo");
+    # s.loadTopo("lab.topo");
+    s.loadTopo("lab.topo");
+    
     s.loadNoise("no_noise.txt");
     s.bootAll();
     s.addChannel(s.COMMAND_CHANNEL);
     s.addChannel(s.GENERAL_CHANNEL);
+    # s.addChannel(s.FLOODING_CHANNEL);
+    # s.addChannel(s.NEIGHBOR_CHANNEL);
     s.addChannel(s.ROUTING_CHANNEL);
-    #s.addChannel(s.FLOODING_CHANNEL);
-    #s.addChannel(s.NEIGHBOR_CHANNEL);
-    s.runTime(100);
-    #s.ping(4, 8, "Hello, World");
-    #s.runTime(10);
-    #s.ping(9, 3, "Hello, World 2!");
-    #s.runTime(20);
-    #s.neighborDMP(0);
-    
-    for i in range(10):
-        s.neighborDMP(i);
-        s.runTime(10);
 
+    s.runTime(500);
+    s.routeDMP(4);
     s.runTime(20);
+    s.routeDMP(5);
+    s.runTime(20);
+    s.ping(4, 8, "Hey!");
+    # s.runTime(20);
+    # s.ping(1,9, "Hello!");
+    
+    # for i in range(s.numMote + 1):
+    #     s.neighborDMP(i);
+    #     s.runTime(5);
+
+    # s.runTime(100);
+
+    # for i in range(s.numMote + 1):
+    #     s.routeDMP(i);
+    #     s.runTime(5);
+
+
+
+    # s.runTime(1000);
+
+    # for i in range(s.numMote + 1):
+    #     s.routeDMP(i);
+    #     s.runTime(5);
+
+    # s.routeDMP(i);
+    s.runTime(10);
 
 if __name__ == '__main__':
     main()

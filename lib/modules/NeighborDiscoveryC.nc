@@ -22,6 +22,12 @@ implementation
    components FloodingC;
    NeighborDiscoveryP.Flooding -> FloodingC;
 
-   components new ListC(uint32_t, 16) as cache;
-   NeighborDiscoveryP.cache -> cache;
+   components new HashmapC(uint16_t, MAX_NODES) as NeighborTable;
+   NeighborDiscoveryP.NeighborTable -> NeighborTable;
+
+   // components new ListC(uint16_t, MAX_NODES) as NeighborList;
+   // NeighborDiscoveryP.NeighborList -> NeighborList;
+
+   // components new ListC(uint32_t, 16) as cache;
+   // NeighborDiscoveryP.cache -> cache;
 }

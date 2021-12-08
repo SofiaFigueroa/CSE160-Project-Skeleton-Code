@@ -1,7 +1,7 @@
 /*
-   Sofia Figueroa, sfigueroa12@ucmerced.edu@ucmerced.edu
-   CSE160 - Computer Networks, Fall 2021, UC Merced
-*/
+ * Sofia Figueroa, sfigueroa12@ucmerced.edu@ucmerced.edu
+ * CSE160 - Computer Networks, Fall 2021, UC Merced
+ */
 
 #include "../../includes/CommandMsg.h"
 #include "../../includes/packet.h"
@@ -9,118 +9,85 @@
 
 module FloodingP
 {
-    provides interface Flooding; // Wire module to interface
-    uses interface SimpleSend as Sender; // Allows use of SimpleSend Interface, wired in FloodingC
-    uses interface List<pack> as cache;
+   provides interface Flooding;
+   uses
+   {
+      interface SimpleSend as Sender;
+      interface Packet;
+
+      // [0,1,2,3,4,5,6...] sequence number (seq#)
+      // [5,3,2,1,0,4,3...] highestSeq for each seq#
+      interface Hashmap<uint16_t> as seqCache;
+   }
 }
 
-// Details of Flooding; How to call interfaces.
 implementation
 {
-    uint16_t i = 0;
-    uint16_t highestSeq = 0;
-    pack fp; // floodPacket
-    pack cp; // cachePacket
-    pack *floodPackage = &fp;
-    pack *cachePackage = &cp;
+   pack *sendPackage;
 
-    /*
-        True:   Duplicate Sequence # Found
-        False:  No Duplicates Found
-    */
-    bool checkCacheForDuplicates(pack msg)
-    {
-        for (i; i < call cache.size(); i++)
-        {
-            cp = call cache.get(i);
-            if (floodPackage->seq == cachePackage->seq)
-            {
-                dbg(FLOODING_CHANNEL, "Duplicate Found!\n");
-                return TRUE;
-            }
-        }
+   bool checkTTL()
+   {
+      // Since TTL wraps around from 0 -> 255
+      if (sendPackage->TTL > MAX_TTL)
+      {
+         dbg(FLOODING_CHANNEL, "TTL FAIL\n");
+         return FALSE;
+      }
 
-        call cache.pushback(fp);
-        dbg(FLOODING_CHANNEL, "Adding to cache!\n");
-        return FALSE;
-    }
+      // dbg(FLOODING_CHANNEL, "TTL1 IS OKAY AND IS %hhu\n", sendPackage->TTL);
+      sendPackage->TTL = sendPackage->TTL - 1;
+      // dbg(FLOODING_CHANNEL, "TTL2 IS OKAY AND IS %hhu\n", sendPackage->TTL);
 
-    void setHighestSeq()
-    {
-        for (i; i < call cache.size(); i++)
-        {
-            cp = call cache.get(i);
-            if (cachePackage->seq > highestSeq) highestSeq = cachePackage->seq;
-        }
+      return TRUE;
+   }
 
-        floodPackage->seq = highestSeq + 1;
-    }
+   bool isDupe()
+   {
+      if(sendPackage->seq <= call seqCache.get(sendPackage->src))
+      {
+         dbg(FLOODING_CHANNEL, "DUPLICATE\n");
+         return TRUE;
+      }
 
-    void decrementTTL()
-    {
-        floodPackage->TTL -= 1;
-    }
+      call seqCache.insert(sendPackage->src, sendPackage->seq);
+      
+      return FALSE;
+   }
 
-    uint16_t getTTL()
-    {
-        return floodPackage->TTL;
-    }
+   // TRUE IF GOOD
+   // FALSE IF TTL IS <0 OR IS DUPE
+   command bool Flooding.checkPacket(pack *msgCheck)
+   {
+      sendPackage = msgCheck;
+      
+      if(checkTTL() && !isDupe())
+      {
+         msgCheck = sendPackage;
+         return TRUE;
+      }
+      return FALSE;
+   }
 
-    bool readyToSend()
-    {
-        // Check Ping Source
-        if (floodPackage->src == TOS_NODE_ID)
-        {
-            floodPackage->protocol = PROTOCOL_PINGREPLY;
-            setHighestSeq();
-            return TRUE;
-        }
+   command uint16_t Flooding.getNewSequenceNumber()
+   {
+      call seqCache.insert(TOS_NODE_ID, (call seqCache.get(TOS_NODE_ID) + 1));
+      return call seqCache.get(TOS_NODE_ID);
+   }
 
-        if (floodPackage->r == 1)
-        {
-            decrementTTL();
-            if (getTTL() < 0 || getTTL() > MAX_TTL) return FALSE;
+   // Assumes it's a new packet and if not, that we went through the Flooding.isPacketDupe check
+   command void Flooding.flood(pack msg)
+   {
+      sendPackage = &msg;
 
-            return TRUE;
-        }
+      /* IF THIS IS OUR PACKET */
+      if (sendPackage->src == TOS_NODE_ID)
+      {
+         sendPackage->seq = call Flooding.getNewSequenceNumber();
+      }
 
-        // Check TTL
-        decrementTTL();
-        if (getTTL() <= 0 || getTTL() > MAX_TTL) return FALSE;
+      /* IF THIS IS NOT OUR PACKET */
+      // TODO
 
-        // Check Cache
-        if (checkCacheForDuplicates(fp)) return FALSE;
-
-        // Passed All Checks
-        return TRUE;
-    }
-    
-    // Debug Function
-    void checkSourceDestination(pack* msg)
-    {
-        dbg(FLOODING_CHANNEL, "Source Address: %hhu, Source Dest: %hhu\n", msg->src, msg->dest);
-    }
-
-    command void Flooding.flood(pack msg)
-    {
-        fp = msg;
-        if (readyToSend()) call Sender.send(fp, AM_BROADCAST_ADDR); // Checks TTL, Cache, etc
-        //dbg(FLOODING_CHANNEL, "Destination 1:\n");
-    
-        logPack(floodPackage);
-    }
-
-    // Use if neighbor is known WS = With Source->Dest
-    command void Flooding.floodWS(pack msg, uint16_t dest)
-    {
-        fp = msg;
-
-        // Debug
-        //checkSourceDestination(floodPackage);
-    
-        // Check TTL, Cache, etc.
-        if (readyToSend()) call Sender.send(fp, dest);
-        dbg(FLOODING_CHANNEL, "Destination 2: %d\n", dest);
-        logPack(floodPackage);
-    }
+      call Sender.send(msg, AM_BROADCAST_ADDR);
+   }
 }

@@ -11,9 +11,10 @@
 #include "includes/CommandMsg.h"
 #include "includes/packet.h"
 
-configuration NodeC{
-}
-implementation {
+configuration NodeC {}
+
+implementation
+{
     components MainC;
     components Node;
     components new AMReceiverC(AM_PACK) as GeneralReceive;
@@ -40,7 +41,9 @@ implementation {
     components new TimerMilliC() as NeighborTimer;
     Node.NeighborTimer -> NeighborTimer;
 
+    components new TimerMilliC() as RoutingTimer;
+    Node.RoutingTimer -> RoutingTimer;
+
     components RoutingC;
     Node.Routing -> RoutingC;
-
 }

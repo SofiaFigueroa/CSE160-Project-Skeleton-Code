@@ -1,7 +1,9 @@
 #include "../../includes/CommandMsg.h"
 #include "../../includes/packet.h"
 
-interface Flooding{
+interface Flooding
+{
    command void flood(pack msg);
-   command void floodWS(pack msg, uint16_t dest);
+   command bool checkPacket(pack *msgCheck);
+   command uint16_t getNewSequenceNumber();
 }

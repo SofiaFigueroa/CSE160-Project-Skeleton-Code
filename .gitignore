@@ -5,3 +5,7 @@ build/*
 *.xml
 TOSSIM.py
 _TOSSIMmodule.so
+
+# Extra Files
+.prettierrc
+.vscode

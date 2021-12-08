@@ -4,128 +4,88 @@
 */
 
 #include "../../includes/CommandMsg.h"
+#include "../../includes/packet.h"
+#include "../../includes/protocol.h"
 
 module NeighborDiscoveryP
 {
-   provides interface NeighborDiscovery; // Declare our own interface
-   
+   provides interface NeighborDiscovery; // Declare own interface
+
    uses
    {
       interface SimpleSend as Sender;
       interface Flooding as Flooding;
-      interface List<uint32_t> as cache;
-      interface Hashmap<uint32_t> as neighborTable;
+      interface Hashmap<uint16_t> as NeighborTable;
+      // interface List<uint16_t> as NeighborList;
    }
 }
 
-/*
-   This means having your own neighbor discovery
-   header information that should include:
-      –Request or Reply field
-      –Monotonically increasing sequence number to uniquely identify the packet
-      –Source address information can be obtained from the link layer
-
-   You should have a neighbor table with three (3) fields:
-      –Neighbor address
-      –Quality of the link(percentage)
-      –Active neighbor (yes/no)
-*/
-
 implementation
 {
-   // Iterator
-   uint16_t i = 0;
-   
-   // This Module's Neighbor Packet
-   pack ndp;
-   pack *neighborPacket = &ndp;
-   
-   // Temporary Variables
-   uint16_t cacheTemp;
-   uint16_t previousSender;
+   pack *sendPackage;
+   pack sendBack;
+   uint16_t i;
+   uint16_t j;
+   uint16_t neighborList[10] = {0};
 
-   /* 2D Neighbor Table:
-    * 3 Columns: 0=Neighbor Address, 1=Quality of Link, 2=Active Neighbor (0/1)
-    * 16 Rows: Can be changed for number of nodes
-    */
-   uint16_t neighborTable[3][16] = {0};
-   uint16_t neighborList[16];
-
-   command void NeighborDiscovery.send(pack msg, uint16_t dest) {}
-
-   uint16_t getPrevHop()
+   command uint16_t NeighborDiscovery.getTable(uint16_t k)
    {
-      return neighborPacket->curr;  // Caches previous hop
-   }
-
-   void setCurrHop()
-   {
-      neighborPacket->curr = TOS_NODE_ID; // Sets current hop
-   }
-
-   // 0 = Ping, 1 = Request, 2 = Reply
-   void setRQ(uint8_t value)
-   {
-      neighborPacket->r = value;
-   }
-
-   command void NeighborDiscovery.neighborDump()
-   {
-      // We've already received something from them
-      dbg(GENERAL_CHANNEL, "I am %d. My neighbors are:\n", TOS_NODE_ID);
-
-      for (i = 0; i < 16; i++)
+      if (call NeighborTable.get(k) == 1)
       {
-         if (neighborTable[0][i] != 0)
-         {
-            dbg(GENERAL_CHANNEL, "%d\n", neighborTable[0][i]);
-         }
-      }    
-
-      return;  
+         // dbg(ROUTING_CHANNEL, "Returning neighbor %d\n", k);
+         return k;
+      }
+      
+      return 0;
    }
 
-   command int[] NeighborDiscovery.getNeighbors() {}
-
-   bool checkForDuplicates()
+   command void NeighborDiscovery.setCurr(pack *msgCheck)
    {
-      for (i = 0; i < 16; i++)
+      msgCheck->curr = TOS_NODE_ID;
+   }
+
+   command void NeighborDiscovery.log(uint16_t mote)
+   {
+      call NeighborTable.insert(mote, 1);
+   }
+
+   command void NeighborDiscovery.dumpTable()
+   {
+      if (call NeighborTable.isEmpty())
       {
-         if (previousSender == neighborTable[0][i])
+         dbg(GENERAL_CHANNEL, "Neighbor Table is EMPTY / No Neighbors for this Node\n");
+         return; // Don't waste time if the table is empty.
+      }
+
+      for (i = 0; i < MAX_NODES; i++)
+      {
+         if (call NeighborTable.get(i) == 1)
          {
-            //dbg(NEIGHBOR_CHANNEL, "Prev: %d, Table: %d\n", previousSender, neighborTable[0][i]);
-            //neighborDump(); // Debug
-            return TRUE;
+            dbg(GENERAL_CHANNEL, "%d \n", i);
          }
       }
 
-      return FALSE;
+      return;
    }
 
-   command void NeighborDiscovery.reply(pack msg)
+   command void NeighborDiscovery.sendPacketBack(pack *msgBack)
    {
-      ndp = msg;
-      previousSender = getPrevHop();
-      setCurrHop();
+      msgBack->protocol = PROTOCOL_PINGREPLY;
 
-      // IF duplicate, drop packet
-      if (checkForDuplicates())
+      if (msgBack->curr != TOS_NODE_ID)
       {
-         dbg (NEIGHBOR_CHANNEL, "Duplicate found!\n");
-         return;
+         call NeighborDiscovery.log(msgBack->curr);
+         call NeighborDiscovery.setCurr(msgBack); 
+         call Sender.send(sendBack, msgBack->curr);
       }
 
-      neighborTable[0][previousSender] = previousSender;
+      return;
+   }
 
-      // Log that we are sending it back to the previous sender.
-      dbg(NEIGHBOR_CHANNEL, "Replying back to %d, my neighbor.\n", previousSender);
-      setRQ(2);
-      call Sender.send(ndp, previousSender);
-      logPack(neighborPacket);
-
-      // Send it along as well
-      dbg(NEIGHBOR_CHANNEL, "Reply sent, now flooding.\n");
-      setRQ(1);
-      call Flooding.flood(ndp);
+   command void NeighborDiscovery.discover(pack msg)
+   {
+      dbg(NEIGHBOR_CHANNEL, "Sending ND_PACKET\n");
+      call Flooding.flood(msg);
+      return;
    }
 }
