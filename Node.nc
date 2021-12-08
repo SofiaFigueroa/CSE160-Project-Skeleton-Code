@@ -119,6 +119,7 @@ implementation
          if (myMsg->protocol == PROTOCOL_IP)
          {
             dbg(ROUTING_CHANNEL, "IP Packet Received\n");
+            // logPack(myMsg);
 
             if (myMsg->dest == TOS_NODE_ID && packetChecked)
             {
@@ -127,12 +128,7 @@ implementation
             }
             else if (myMsg->dest != TOS_NODE_ID && packetChecked)
             {
-               // logPack(myMsg);
-               // dbg(NEIGHBOR_CHANNEL, "Got msg back from %hhu, my neighbor\n", myMsg->curr);
-               
-               // call NeighborDiscovery.sendPacketBack(myMsg);
-               dbg(ROUTING_CHANNEL, "Not mine\n");
-               // call Flooding.flood(*myMsg);
+               dbg(ROUTING_CHANNEL, "Not ,this is for %hhu and I'm %hhu\n", myMsg->dest, TOS_NODE_ID);
                call Routing.send(*myMsg);
                return msg;
             }

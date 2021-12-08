@@ -147,7 +147,7 @@ implementation
       {
          if(routingTable[i][0] == 0)
          {
-            routingTable[i][0] = 5;
+            routingTable[i][0] = neighborList[1];
          }
       }
 
@@ -191,28 +191,35 @@ implementation
       dijkstra();
    }
 
-   uint16_t getNearestNeighbor(uint16_t dest)
+   uint16_t getNearestNeighbor()
    {
+      call NeighborDiscovery.setCurr(sendPackage);
+      linkStatePackets = call linkStates.get(sendPackage->curr);
+      linkSP = &linkStatePackets;
+      memcpy(test, linkSP->linkState, PACKET_MAX_PAYLOAD_SIZE);
+
       // Check if it's a neighbor
       for (i = 0; i < 10; i++)
       {
-         if(dest == neighborList[i]) return dest;
+         if(sendPackage->dest == test[i])
+         {
+            dbg(ROUTING_CHANNEL, "Sending to %d\n", sendPackage->dest);
+            return sendPackage->dest;
+         }
       }
 
       // Check if it's not a neighbor
-      return getNearestNeighbor(routingTable[dest][0]);
+      dbg(ROUTING_CHANNEL, "Oops.Sending to %d\n", test[0]);
+      return test[0];
    }
 
    command void Routing.send(pack packet)
    {
       sendPackage = &packet;
-      // dbg(ROUTING_CHANNEL, "Sending to %d\n", getNearestNeighbor(sendPackage->dest));
-      if(sendPackage->seq == 0)
-      {
-         sendPackage->seq = call Flooding.getNewSequenceNumber();
-      }
-      call Sender.send(packet, getNearestNeighbor(sendPackage->dest));
-      // logPack(sendPackage);
+
+      // Check to see if I am the sender
+      if(sendPackage->seq == 0) sendPackage->seq = call Flooding.getNewSequenceNumber();
+      call Sender.send(packet, getNearestNeighbor());
    }
 
    command void Routing.initialize(pack packet)

@@ -15,8 +15,6 @@ class TestSim:
     CMD_ROUTE_DUMP=3
     CMD_TEST_SERVER=5
     CMD_TEST_CLIENT=4
-    
-    
 
     # CHANNELS - see includes/channels.h
     COMMAND_CHANNEL="command";
@@ -147,22 +145,33 @@ def main():
 
     # s.loadTopo("long_line.topo");
     # s.loadTopo("lab.topo");
-    s.loadTopo("lab.topo");
+    s.loadTopo("example.topo");
     
     s.loadNoise("no_noise.txt");
     s.bootAll();
 
     s.addChannel(s.COMMAND_CHANNEL);
     s.addChannel(s.GENERAL_CHANNEL);
+    # s.addChannel(s.ROUTING_CHANNEL);
     s.addChannel(s.TRANSPORT_CHANNEL);
     # After sending a ping, simulate a little to prevent collision.
-    s.runTime(300);
-    s.testServer(5, 40);
-    s.runTime(60);
-    s.testClient(1, 10, 40, "Huh");
-    s.runTime(1);
-    # s.ping(3, 4, "hey");
-    s.runTime(1000);
+    s.runTime(100);
+
+    for i in range(s.numMote + 1):
+        s.routeDMP(i);
+        s.runTime(5);
+
+    s.runTime(500);
+
+    s.runTime(20);
+    s.ping(4,2,"Hey!");
+
+    s.runTime(20);
+    s.ping(5,3,"Hello!");
+
+    s.runTime(20);
+    s.ping(9,5,"Hello2!");
+    s.runTime(20);
 
 if __name__ == '__main__':
     main()

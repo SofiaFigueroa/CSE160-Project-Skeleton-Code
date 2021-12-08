@@ -14,11 +14,17 @@ module TransportP
 implementation
 {
    uint16_t i = 0;
-   socket_store_t *socket;
+   socket_store_t socket;
+
+   void makeSocket()
+   {
+      socket->state = CLOSED;
+      socket->src = 0;
+      socket->dest = 0;
+   }
 
    command socket_t Transport.socket()
    {
-      
 
       return NULL;
    }
