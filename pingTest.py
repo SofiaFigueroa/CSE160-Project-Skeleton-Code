@@ -18,29 +18,17 @@ def main():
     # Turn on all of the sensors.
     s.bootAll();
 
-    # Add the main channels. These channels are declared in includes/channels.h
     s.addChannel(s.COMMAND_CHANNEL);
     s.addChannel(s.GENERAL_CHANNEL);
-    s.addChannel(s.FLOODING_CHANNEL);
-    s.addChannel(s.NEIGHBOR_CHANNEL);
-
+    s.addChannel(s.TRANSPORT_CHANNEL);
     # After sending a ping, simulate a little to prevent collision.
-    s.runTime(20);
-    s.ping(2, 3, "Hello, World");
+    s.runTime(300);
+    s.testServer(1);
+    s.runTime(60);
+    s.testClient(4);
     s.runTime(1);
-
-    s.ping(1, 8, "Hi!");
-    s.runTime(1);
-
-    s.ping(1,4, "Hey!");
-    s.runTime(100);
-
-    for i in range(s.numMote + 1):
-        s.neighborDMP(i);
-        s.runTime(1);
-
-    s.ping(4,1, "Woah!");
-    s.runTime(1);
+    # s.ping(3, 4, "hey");
+    s.runTime(1000);
 
 if __name__ == '__main__':
     main()

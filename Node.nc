@@ -198,10 +198,15 @@ implementation
    {}
 
    event void CommandHandler.setTestServer()
-   {}
+   {
+      dbg(TRANSPORT_CHANNEL, "TestServer Open?\n");
+      // dbg(TRANSPORT_CHANNEL, "TestClient Open?\n");
+   }
 
    event void CommandHandler.setTestClient()
-   {}
+   {
+      dbg(TRANSPORT_CHANNEL, "TestClient Open?\n");
+   }
 
    event void CommandHandler.setAppServer()
    {}

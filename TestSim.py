@@ -13,6 +13,10 @@ class TestSim:
     CMD_PING = 0
     CMD_NEIGHBOR_DUMP = 1
     CMD_ROUTE_DUMP=3
+    CMD_TEST_SERVER=5
+    CMD_TEST_CLIENT=4
+    
+    
 
     # CHANNELS - see includes/channels.h
     COMMAND_CHANNEL="command";
@@ -129,6 +133,14 @@ class TestSim:
         print 'Adding Channel', channelName;
         self.t.addChannel(channelName, out);
 
+    def testClient(self, dest, srcPort, destPort, transfer):
+        print 'Setting up test client!';
+        self.sendCMD(self.CMD_TEST_CLIENT, dest, "{0}{1}{2}".format(chr(dest),chr(srcPort),chr(destPort)))
+
+    def testServer(self, address, port):
+        print 'Setting up test server at port', port
+        self.sendCMD(self.CMD_TEST_SERVER, address, "{0}".format(chr(port)))
+
 def main():
     s = TestSim();
     s.runTime(10);
@@ -139,41 +151,18 @@ def main():
     
     s.loadNoise("no_noise.txt");
     s.bootAll();
+
     s.addChannel(s.COMMAND_CHANNEL);
     s.addChannel(s.GENERAL_CHANNEL);
-    # s.addChannel(s.FLOODING_CHANNEL);
-    # s.addChannel(s.NEIGHBOR_CHANNEL);
-    s.addChannel(s.ROUTING_CHANNEL);
-
-    s.runTime(500);
-    s.routeDMP(4);
-    s.runTime(20);
-    s.routeDMP(5);
-    s.runTime(20);
-    s.ping(4, 8, "Hey!");
-    # s.runTime(20);
-    # s.ping(1,9, "Hello!");
-    
-    # for i in range(s.numMote + 1):
-    #     s.neighborDMP(i);
-    #     s.runTime(5);
-
-    # s.runTime(100);
-
-    # for i in range(s.numMote + 1):
-    #     s.routeDMP(i);
-    #     s.runTime(5);
-
-
-
-    # s.runTime(1000);
-
-    # for i in range(s.numMote + 1):
-    #     s.routeDMP(i);
-    #     s.runTime(5);
-
-    # s.routeDMP(i);
-    s.runTime(10);
+    s.addChannel(s.TRANSPORT_CHANNEL);
+    # After sending a ping, simulate a little to prevent collision.
+    s.runTime(300);
+    s.testServer(5, 40);
+    s.runTime(60);
+    s.testClient(1, 10, 40, "Huh");
+    s.runTime(1);
+    # s.ping(3, 4, "hey");
+    s.runTime(1000);
 
 if __name__ == '__main__':
     main()
