@@ -18,7 +18,7 @@ implementation
    uint16_t i = 0;
 
    // Keeps track of sockets
-   socket_t socketID = -1;                              // Global IDs
+   socket_t acceptedSocket = -1;                              // Global IDs
    socket_t currSocket = -1;                            // Single-Use Purpose
    socket_store_t socketTable[MAX_NUM_OF_SOCKETS];      // Stores sockets
    uint16_t socketsInUse[MAX_NUM_OF_SOCKETS] = {0};     // Stores socketIDs
@@ -49,7 +49,6 @@ implementation
    command error_t Transport.bind(socket_t fd, socket_addr_t *addr)
    {
       return (error_t)SUCCESS;
-      // return (error_t)FAIL;
    }
 
    command socket_t Transport.accept(socket_t fd)
@@ -92,23 +91,39 @@ implementation
       return (error_t)FAIL;
    }
 
-   command void Transport.initializeClient()
+   command void Transport.initializeClient(uint16_t dest, uint16_t srcPort, uint16_t destPort, uint16_t transfer)
    {
-      // s = &socket;
+      currSocket = call Transport.socket();
       
-      // currentSocket = call Transport.socket(); // Get socketID
+      if (currSocket != (socket_t)NULL)
+      {
+         dbg(TRANSPORT_CHANNEL, "Unable to Initialize Client\n");
+         return;
+      }
+      else
+      {
+         socketsInUse[currSocket] = 1;
+         s = &socketTable[currSocket];
+
+         //========== TRANSPORT.BIND ==========//
+
+         sa = &socketAddr;             // Set socket_addr
+         sa->port = TOS_NODE_ID;       // Set socket_addr port
+         sa->addrp = srcPort;          // Set socket_addr node
+
+         // Add port and addr information to our socket info
+         s->src = socketPort;
+         s->dest = socketAddr;
+
+         //======== END TRANSPORT.BIND ========//
 
 
-      // s->RTT = 5;
-      // s->flag = 4;
-      // dbg(TRANSPORT_CHANNEL, "From this socket, RTT is %d and Flag is %d\n", s->RTT, s->flag);
+      }
    }
 
    event void AcceptTimer.fired()
    {
       dbg(TRANSPORT_CHANNEL, "No longer listening\n", currSocket);
-
-      
    }
 
    command void Transport.initializeServer(uint16_t node, uint8_t port)
@@ -128,7 +143,10 @@ implementation
 
          socketPort = port;            // Set socket_port
 
+         //========== TRANSPORT.BIND ==========//
+
          sa = &socketAddr;             // Set socket_addr
+         // Say port was 40, socket_addr_t dest -> port = 40
          sa->port = port;              // Set socket_addr port
          sa->addrp = node;             // Set socket_addr node
 
@@ -136,7 +154,9 @@ implementation
          s->src = socketPort;
          s->dest = socketAddr;
 
-         // For test client, currSocket is 0/8 and sa->addrp is TOS_NODE_ID
+         //======== END TRANSPORT.BIND ========//
+
+         // For test server, currSocket is 0/8 and sa->addrp is TOS_NODE_ID
          dbg(TRANSPORT_CHANNEL, "Binding to Socket %d from Address %d\n", currSocket, sa->addrp);
          
          if (call Transport.bind(currSocket, sa) == (error_t)FAIL)
@@ -149,6 +169,7 @@ implementation
             // 3 second timer
             call AcceptTimer.startOneShot(3000);
             dbg(TRANSPORT_CHANNEL, "Binded to %d. Listening...\n", currSocket);
+            call Transport.listen();
          }
       }
    }
