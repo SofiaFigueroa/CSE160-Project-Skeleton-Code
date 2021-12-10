@@ -10,4 +10,7 @@ implementation
 
    components RoutingC;
    TransportP.Routing -> RoutingC;
+
+   components new TimerMilliC() as AcceptTimer;
+   TransportP.AcceptTimer -> AcceptTimer;
 }

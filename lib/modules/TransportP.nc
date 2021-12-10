@@ -8,6 +8,7 @@ module TransportP
    uses
    {
       interface Routing as Routing;
+      interface Timer<TMilli> as AcceptTimer;
    }
 }
 
@@ -17,30 +18,38 @@ implementation
    uint16_t i = 0;
 
    // Keeps track of sockets
-   socket_t socketID = -1;    // Global
-   socket_t currSocket = -1;  // Single-Use
-   socket_store_t socketTable[MAX_NUM_OF_SOCKETS];
+   socket_t socketID = -1;                              // Global IDs
+   socket_t currSocket = -1;                            // Single-Use Purpose
+   socket_store_t socketTable[MAX_NUM_OF_SOCKETS];      // Stores sockets
+   uint16_t socketsInUse[MAX_NUM_OF_SOCKETS] = {0};     // Stores socketIDs
+   uint16_t acceptedSockets[MAX_NUM_OF_SOCKETS] = {0};  // Stores active connections
 
    // Actual Sockets
    socket_store_t *s;
    socket_store_t socket;
 
+   // Socket Port Struct
+   socket_port_t socketPort;
+
+   // Socket Addr Struct
+   socket_addr_t *sa;
+   socket_addr_t socketAddr;
+
    command socket_t Transport.socket()
    {
-      socketID++;
-
-      if(socketID >= 10)
+      for(i = 0; i < MAX_NUM_OF_SOCKETS; i++)
       {
-         dbg(TRANSPORT_CHANNEL, "Unable to create a new socket, too many sockets. End one and try again.\n");
-         return (socket_t)NULL;
+         if(socketsInUse[i] == 0) return i;
       }
 
-      return socketID;
+      dbg(TRANSPORT_CHANNEL, "Unable to create a new socket, all are in use.\n");
+      return (socket_t)NULL;
    }
 
    command error_t Transport.bind(socket_t fd, socket_addr_t *addr)
    {
-      return (error_t)FAIL;
+      return (error_t)SUCCESS;
+      // return (error_t)FAIL;
    }
 
    command socket_t Transport.accept(socket_t fd)
@@ -95,14 +104,53 @@ implementation
       // dbg(TRANSPORT_CHANNEL, "From this socket, RTT is %d and Flag is %d\n", s->RTT, s->flag);
    }
 
-   command void Transport.initializeServer(uint16_t node, uint16_t port)
+   event void AcceptTimer.fired()
    {
-      s = &socket;
+      dbg(TRANSPORT_CHANNEL, "No longer listening\n", currSocket);
 
+      
+   }
+
+   command void Transport.initializeServer(uint16_t node, uint8_t port)
+   {
       currSocket = call Transport.socket();
-      // if (currSocket == NULL) return;
+      dbg(TRANSPORT_CHANNEL, "Using socket %d/%d\n", currSocket, MAX_NUM_OF_SOCKETS);
 
-      // s->
+      if (currSocket != (socket_t)NULL)
+      {
+         dbg(TRANSPORT_CHANNEL, "Unable to Initialize Server\n");
+         return;
+      }
+      else
+      {
+         socketsInUse[currSocket] = 1; // Mark socket as in use
+         s = &socketTable[currSocket]; // Get socket from correct slot
+
+         socketPort = port;            // Set socket_port
+
+         sa = &socketAddr;             // Set socket_addr
+         sa->port = port;              // Set socket_addr port
+         sa->addrp = node;             // Set socket_addr node
+
+         // Add port and addr information to our socket info
+         s->src = socketPort;
+         s->dest = socketAddr;
+
+         // For test client, currSocket is 0/8 and sa->addrp is TOS_NODE_ID
+         dbg(TRANSPORT_CHANNEL, "Binding to Socket %d from Address %d\n", currSocket, sa->addrp);
+         
+         if (call Transport.bind(currSocket, sa) == (error_t)FAIL)
+         {
+            dbg(TRANSPORT_CHANNEL, "Unable to Bind! Can't Initialize.\n");
+            return;
+         }
+         else
+         {
+            // 3 second timer
+            call AcceptTimer.startOneShot(3000);
+            dbg(TRANSPORT_CHANNEL, "Binded to %d. Listening...\n", currSocket);
+         }
+      }
    }
 
    command void Transport.initialize()
@@ -111,15 +159,7 @@ implementation
       
       for (i = 0; i < MAX_NUM_OF_SOCKETS; i++)
       {
-         s = &socket;
-         s->RTT = 1 * i;
          socketTable[i] = socket;
-      }
-
-      for (i = 0; i < MAX_NUM_OF_SOCKETS; i++)
-      {
-         s = &socketTable[i];
-         dbg(TRANSPORT_CHANNEL, "RTT of socket %d is %d\n", i, s->RTT);
       }
    }
 }
