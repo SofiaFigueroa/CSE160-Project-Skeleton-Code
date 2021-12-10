@@ -131,47 +131,43 @@ class TestSim:
         print 'Adding Channel', channelName;
         self.t.addChannel(channelName, out);
 
-    def testClient(self, dest, srcPort, destPort, transfer):
-        print 'Setting up test client!';
-        self.sendCMD(self.CMD_TEST_CLIENT, dest, "{0}{1}{2}".format(chr(dest),chr(srcPort),chr(destPort)))
+    def testClient(self, source, dest, srcPort, destPort, transfer):
+        # print 'Setting up test client!'
+        self.sendCMD(self.CMD_TEST_CLIENT, source, "{0}{1}{2}{3}".format(chr(dest), chr(srcPort), chr(destPort), chr(transfer)))
 
     def testServer(self, address, port):
-        print 'Setting up test server at port', port
+        # print 'Setting up test server at port', port
         self.sendCMD(self.CMD_TEST_SERVER, address, "{0}".format(chr(port)))
 
 def main():
-    s = TestSim();
-    s.runTime(10);
-
-    # s.loadTopo("long_line.topo");
-    # s.loadTopo("lab.topo");
-    s.loadTopo("example.topo");
+    s=TestSim()                      # Get simulation ready to run.
+    s.runTime(10)                    # Before we do anything, lets simulate the network off.
     
-    s.loadNoise("no_noise.txt");
-    s.bootAll();
+    # # Load the layout of the network.
+    # s.loadTopo("long_line.topo")
+    s.loadTopo("lab.topo")           
+    
+    s.loadNoise("no_noise.txt")      # Add a noise model to all of the motes.
+    s.bootAll()                      # Turn on all of the sensors.
 
-    s.addChannel(s.COMMAND_CHANNEL);
-    s.addChannel(s.GENERAL_CHANNEL);
-    # s.addChannel(s.ROUTING_CHANNEL);
-    s.addChannel(s.TRANSPORT_CHANNEL);
-    # After sending a ping, simulate a little to prevent collision.
-    s.runTime(100);
+    s.addChannel(s.COMMAND_CHANNEL)
+    s.addChannel(s.GENERAL_CHANNEL)
+    s.addChannel(s.ROUTING_CHANNEL)
+    s.addChannel(s.TRANSPORT_CHANNEL)
 
-    for i in range(s.numMote + 1):
-        s.routeDMP(i);
-        s.runTime(5);
+    # s.runTime(10)
+    # s.routeDMP(2)
+    # s.runTime(1)
+    # s.routeDMP(1)
+    # s.runTime(10)
+    # s.ping(3, 7, "Hello!")
+    # s.runTime(10)
 
-    s.runTime(500);
-
-    s.runTime(20);
-    s.ping(4,2,"Hey!");
-
-    s.runTime(20);
-    s.ping(5,3,"Hello!");
-
-    s.runTime(20);
-    s.ping(9,5,"Hello2!");
-    s.runTime(20);
+    s.runTime(10)
+    s.testServer(8, 40)
+    s.runTime(10)
+    s.testClient(4, 8, 40, 40, 80)
+    s.runTime(10)
 
 if __name__ == '__main__':
     main()

@@ -46,4 +46,7 @@ implementation
 
     components RoutingC;
     Node.Routing -> RoutingC;
+
+    components TransportC;
+    Node.Transport -> TransportC;
 }

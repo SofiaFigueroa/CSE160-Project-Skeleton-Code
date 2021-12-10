@@ -14,63 +14,83 @@ module TransportP
 implementation
 {
    uint16_t i = 0;
+
+   socket_store_t *s;
    socket_store_t socket;
 
-   void makeSocket()
-   {
-      socket->state = CLOSED;
-      socket->src = 0;
-      socket->dest = 0;
-   }
+   // Keeps track of sockets
+   socket_t socketID = -1;
+   socket_t currentSocket = 0;
 
    command socket_t Transport.socket()
    {
+      socketID++;
 
-      return NULL;
+      if(socketID >= 10)
+      {
+         dbg(TRANSPORT_CHANNEL, "Unable to create a new socket, too many sockets. End one and try again.\n");
+         return (socket_t)NULL;
+      }
+
+      return socketID;
    }
 
    command error_t Transport.bind(socket_t fd, socket_addr_t *addr)
    {
-      return FAIL;
+      return (error_t)FAIL;
    }
 
-   command socket_t accept(socket_t fd)
+   command socket_t Transport.accept(socket_t fd)
    {
-      return NULL;
+      return (socket_t)NULL;
    }
 
-   command uint16_t write(socket_t fd, uint8_t *buff, uint16_t bufflen)
-   {
-      return i;
-   }
-
-   command error_t receive(pack* package)
-   {
-      return FAIL;
-   }
-
-   command uint16_t read(socket_t fd, uint8_t *buff, uint16_t bufflen)
+   command uint16_t Transport.write(socket_t fd, uint8_t *buff, uint16_t bufflen)
    {
       return i;
    }
 
-   command error_t connect(socket_t fd, socket_addr_t * addr)
+   command error_t Transport.receive(pack* package)
    {
       return FAIL;
    }
 
-   command error_t close(socket_t fd)
+   command uint16_t Transport.read(socket_t fd, uint8_t *buff, uint16_t bufflen)
    {
-      return FAIL;
+      return i;
    }
 
-   command error_t release(socket_t fd)
+   command error_t Transport.connect(socket_t fd, socket_addr_t * addr)
    {
-      return FAIL;
+      return (error_t)FAIL;
    }
 
-   command error_t listen(socket_t fd)
+   command error_t Transport.close(socket_t fd)
    {
-      return FAIL;
+      return (error_t)FAIL;
+   }
+
+   command error_t Transport.release(socket_t fd)
+   {
+      return (error_t)FAIL;
+   }
+
+   command error_t Transport.listen(socket_t fd)
+   {
+      return (error_t)FAIL;
+   }
+
+   command void Transport.initializeClient()
+   {
+      dbg(TRANSPORT_CHANNEL, "Checkpoint 1\n");
+      currentSocket = call Transport.socket(); // Get socket
+      dbg(TRANSPORT_CHANNEL, "Checkpoint 2\n");
+      s->RTT = 5;
+      dbg(TRANSPORT_CHANNEL, "Socket flag is %d\n", s->RTT);
+   }
+
+   command void Transport.initializeServer()
+   {
+
    }
 }

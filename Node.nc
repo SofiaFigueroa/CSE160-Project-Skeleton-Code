@@ -6,12 +6,14 @@
  * @date   2013/09/03
  *
  */
+
 #include <Timer.h>
 #include "includes/command.h"
 #include "includes/packet.h"
 #include "includes/CommandMsg.h"
 #include "includes/sendInfo.h"
 #include "includes/channels.h"
+#include "includes/socket.h"
 
 module Node{
    uses
@@ -28,6 +30,7 @@ module Node{
       interface Flooding;
       interface NeighborDiscovery;
       interface Routing;
+      interface Transport;
    }
 }
 
@@ -53,7 +56,6 @@ implementation
       dbg(GENERAL_CHANNEL, "Booted\n");
 
       call NeighborTimer.startOneShot(500);
-      
       
       // makePack(&sendPackage, TOS_NODE_ID, AM_BROADCAST_ADDR, TOS_NODE_ID, MAX_TTL, 0, 0, "ND_PACKET", PACKET_MAX_PAYLOAD_SIZE);
       // call NeighborDiscovery.discover(sendPackage);
@@ -128,7 +130,7 @@ implementation
             }
             else if (myMsg->dest != TOS_NODE_ID && packetChecked)
             {
-               dbg(ROUTING_CHANNEL, "Not ,this is for %hhu and I'm %hhu\n", myMsg->dest, TOS_NODE_ID);
+               dbg(ROUTING_CHANNEL, "Not, this is for %hhu and I'm %hhu\n", myMsg->dest, TOS_NODE_ID);
                call Routing.send(*myMsg);
                return msg;
             }
@@ -193,15 +195,16 @@ implementation
    event void CommandHandler.printDistanceVector()
    {}
 
-   event void CommandHandler.setTestServer()
+   event void CommandHandler.setTestServer(uint16_t port)
    {
-      dbg(TRANSPORT_CHANNEL, "TestServer Open?\n");
-      // dbg(TRANSPORT_CHANNEL, "TestClient Open?\n");
+      dbg(TRANSPORT_CHANNEL, "Server Opened by %d, Awaiting on port %d\n", TOS_NODE_ID, port);
+      call Transport.initializeServer();
    }
 
-   event void CommandHandler.setTestClient()
+   event void CommandHandler.setTestClient(uint16_t destination, uint16_t srcPort, uint16_t destPort, uint16_t transfer)
    {
-      dbg(TRANSPORT_CHANNEL, "TestClient Open?\n");
+      dbg(TRANSPORT_CHANNEL, "Client at Node %d created. Dest: %d Source Port: %d Dest Port: %d Transfer: %d\n", TOS_NODE_ID, (uint16_t)destination, (uint16_t)srcPort, (uint16_t)destPort, (uint16_t)transfer);
+      call Transport.initializeClient();
    }
 
    event void CommandHandler.setAppServer()

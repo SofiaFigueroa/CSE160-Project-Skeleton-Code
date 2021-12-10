@@ -73,7 +73,7 @@ implementation
       linkSP = &linkStatePackets;
       memcpy(test, linkSP->linkState, PACKET_MAX_PAYLOAD_SIZE);
 
-      for (i = 0; i < 10; i++)
+      for (i = 0; i < MAX_NODES; i++)
       {
          if(test[i] == 0) break;
 
@@ -120,7 +120,7 @@ implementation
          flag = FALSE;
          for (i = 1; i <= highestNode; i++)
          {
-            if (nextCheck[i] = 1 && nextCheck[i] != visited[i])
+            if ((nextCheck[i] == 1) && nextCheck[i] != visited[i])
             {
                hopCount++;
                inner(i);
@@ -143,7 +143,7 @@ implementation
       linkSP = &linkStatePackets;
       memcpy(test, linkSP->linkState, PACKET_MAX_PAYLOAD_SIZE);
 
-      for (i = 0; i < 10; i++)
+      for (i = 0; i < highestNode; i++)
       {
          if(routingTable[i][0] == 0)
          {
@@ -153,7 +153,7 @@ implementation
 
       // dbg(GENERAL_CHANNEL, "Highest Node is %d\n", highestNode);
       // // Debug
-      for (i = 1; i < 10; i++) dbg(GENERAL_CHANNEL, "%d: [%d %d %d %d]\n", i, routingTable[i][0], routingTable[i][1], routingTable[i][2], routingTable[i][3]);
+      for (i = 1; i <= highestNode; i++) dbg(GENERAL_CHANNEL, "%d: [%d %d %d %d]\n", i, routingTable[i][0], routingTable[i][1], routingTable[i][2], routingTable[i][3]);
    }
 
    command void Routing.log(pack packet)
@@ -182,12 +182,12 @@ implementation
              "Link State Info for (node %d) : %d, %d, %d, %d, %d, %d, %d, %d, %d, %d\n",
              i, test[0], test[1], test[2], test[3], test[4], test[5], test[6], test[7], test[8], test[9]);
 
-         for (j = 0; j < 20; j++)
+         for (j = 0; j < MAX_NODES; j++)
          {
             if (test[j] > highestNode) highestNode = test[j];
          }
       }
-
+      dbg(GENERAL_CHANNEL, "Highest node is %d\n", highestNode);
       dijkstra();
    }
 
@@ -203,14 +203,20 @@ implementation
       {
          if(sendPackage->dest == test[i])
          {
-            dbg(ROUTING_CHANNEL, "Sending to %d\n", sendPackage->dest);
+            dbg(ROUTING_CHANNEL, "Sending to my neighbor %d\n", sendPackage->dest);
             return sendPackage->dest;
          }
       }
 
-      // Check if it's not a neighbor
-      dbg(ROUTING_CHANNEL, "Oops.Sending to %d\n", test[0]);
-      return test[0];
+      if(routingTable[sendPackage->dest][0] == 0)
+      {
+         // Give up, just return your first / only neighbor.
+         dbg(ROUTING_CHANNEL, "I don't know who to send it to so I'm sending it to my neighbor %d\n", test[0]);
+         return test[0];   
+      }
+
+      dbg(ROUTING_CHANNEL, "Sending to %d\n", routingTable[sendPackage->dest][0]);
+      return routingTable[sendPackage->dest][0];
    }
 
    command void Routing.send(pack packet)

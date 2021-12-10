@@ -4,7 +4,7 @@ def main():
    # Get simulation ready to run.
    s = TestSim();
    # Before we do anything, lets simulate the network off.
-   s.runTime(1);
+   s.runTime(10);
    # Load the the layout of the network.
    s.loadTopo("lab.topo");
    # Add a noise model to all of the motes.

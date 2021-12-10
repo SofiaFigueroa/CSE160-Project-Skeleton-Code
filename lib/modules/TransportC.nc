@@ -8,6 +8,6 @@ implementation
    components TransportP;
    Transport = TransportP;
 
-   components RoutingC as Routing;
-   TransportP.Routing = Routing;
+   components RoutingC;
+   TransportP.Routing -> RoutingC;
 }
