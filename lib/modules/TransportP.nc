@@ -18,11 +18,15 @@ implementation
    uint16_t i = 0;
 
    // Keeps track of sockets
-   socket_t acceptedSocket = -1;                              // Global IDs
+   socket_t acceptedSocket = -1;                        // Global IDs
    socket_t currSocket = -1;                            // Single-Use Purpose
    socket_store_t socketTable[MAX_NUM_OF_SOCKETS];      // Stores sockets
    uint16_t socketsInUse[MAX_NUM_OF_SOCKETS] = {0};     // Stores socketIDs
    uint16_t acceptedSockets[MAX_NUM_OF_SOCKETS] = {0};  // Stores active connections
+   pack inbox[MAX_NUM_OF_SOCKETS] = {0};                // Stores incoming TCP packets
+
+   // Package handler
+   pack *sendPackage;
 
    // Actual Sockets
    socket_store_t *s;
@@ -48,11 +52,14 @@ implementation
 
    command error_t Transport.bind(socket_t fd, socket_addr_t *addr)
    {
+      // Accidentally implemented without using this function
       return (error_t)SUCCESS;
    }
 
    command socket_t Transport.accept(socket_t fd)
    {
+
+
       return (socket_t)NULL;
    }
 
@@ -63,7 +70,12 @@ implementation
 
    command error_t Transport.receive(pack* package)
    {
-      return FAIL;
+      memcpy(socket, package->payload, SOCKET_BUFFER_SIZE);
+      s = &socket;
+
+      dbg(TRANSPORT_CHANNEL, "Incoming socket from %hhu.", package->src);
+
+      return (error_t)FAIL;
    }
 
    command uint16_t Transport.read(socket_t fd, uint8_t *buff, uint16_t bufflen)
@@ -88,6 +100,14 @@ implementation
 
    command error_t Transport.listen(socket_t fd)
    {
+      for (int i = 0; i < MAX_NUM_OF_SOCKETS; i++)
+      {
+         if (inbox[currSocket] = 1)
+         {
+            return (error_t)SUCCESS;
+         }
+      }
+
       return (error_t)FAIL;
    }
 
@@ -116,14 +136,17 @@ implementation
          s->dest = socketAddr;
 
          //======== END TRANSPORT.BIND ========//
-
-
       }
    }
 
    event void AcceptTimer.fired()
    {
       dbg(TRANSPORT_CHANNEL, "No longer listening\n", currSocket);
+   }
+
+   void logSockets()
+   {
+      for (i = 0; i < MAX_NUM_OF_SOCKETS; i++) dbg(TRANSPORT_CHANNEL, "socketsInUse[%d] = %d\n", i, socketsInUse[i]);
    }
 
    command void Transport.initializeServer(uint16_t node, uint8_t port)
@@ -169,8 +192,26 @@ implementation
             // 3 second timer
             call AcceptTimer.startOneShot(3000);
             dbg(TRANSPORT_CHANNEL, "Binded to %d. Listening...\n", currSocket);
-            call Transport.listen();
+            
+            while (call AcceptTimer.isRunning())
+            {               
+               if (call Transport.listen(currSocket) == (error_t)SUCCESS)
+               {
+                  sendPackage = &inbox[currSocket];
+                  dbg(TRANSPORT_CHANNEL, "Success! Found incoming connection attempt from %hhu\n", sendPackage->src);
+                  call AcceptTimer.stop();
+               }
+            }
+
+            if (call Transport.listen(currSocket) == (error_t)FAIL)
+            {
+               dbg(TRANSPORT_CHANNEL, "No one wanted to connect to socket %d at port %d. Closing.\n", currSocket, port);
+               socketsInUse[currSocket] = 0; // Close socket officially
+               return;
+            }
          }
+
+         logSockets();
       }
    }
 
