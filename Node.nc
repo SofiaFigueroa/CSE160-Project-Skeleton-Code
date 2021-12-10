@@ -137,6 +137,13 @@ implementation
             }
          }
 
+         if (myMsg->protocol == PROTOCOL_TCP && myMsg->dest == TOS_NODE_ID)
+         {
+            dbg("TCP Packet received for me, %hhu", myMsg->protocol);
+            call Transport.receive(myMsg);
+            return msg;
+         }
+
          if (myMsg->dest == TOS_NODE_ID && packetChecked)
          {
             dbg(GENERAL_CHANNEL, "Package Payload: %s\n", myMsg->payload);
@@ -168,7 +175,6 @@ implementation
 
       // TODO: Redo this to send through IP instead / Routing
       call Routing.send(sendPackage);
-
    }
 
    event void CommandHandler.printNeighbors()
