@@ -146,5 +146,6 @@ interface Transport{
    command error_t listen(socket_t fd);
 
    command void initializeClient();
-   command void initializeServer();
+   command void initializeServer(uint16_t node, uint16_t port);
+   command void initialize();
 }

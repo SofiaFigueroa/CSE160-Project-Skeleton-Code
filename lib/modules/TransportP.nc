@@ -13,14 +13,17 @@ module TransportP
 
 implementation
 {
+   // Iterator
    uint16_t i = 0;
 
+   // Keeps track of sockets
+   socket_t socketID = -1;    // Global
+   socket_t currSocket = -1;  // Single-Use
+   socket_store_t socketTable[MAX_NUM_OF_SOCKETS];
+
+   // Actual Sockets
    socket_store_t *s;
    socket_store_t socket;
-
-   // Keeps track of sockets
-   socket_t socketID = -1;
-   socket_t currentSocket = 0;
 
    command socket_t Transport.socket()
    {
@@ -82,15 +85,41 @@ implementation
 
    command void Transport.initializeClient()
    {
-      dbg(TRANSPORT_CHANNEL, "Checkpoint 1\n");
-      currentSocket = call Transport.socket(); // Get socket
-      dbg(TRANSPORT_CHANNEL, "Checkpoint 2\n");
-      s->RTT = 5;
-      dbg(TRANSPORT_CHANNEL, "Socket flag is %d\n", s->RTT);
+      // s = &socket;
+      
+      // currentSocket = call Transport.socket(); // Get socketID
+
+
+      // s->RTT = 5;
+      // s->flag = 4;
+      // dbg(TRANSPORT_CHANNEL, "From this socket, RTT is %d and Flag is %d\n", s->RTT, s->flag);
    }
 
-   command void Transport.initializeServer()
+   command void Transport.initializeServer(uint16_t node, uint16_t port)
    {
+      s = &socket;
 
+      currSocket = call Transport.socket();
+      // if (currSocket == NULL) return;
+
+      // s->
+   }
+
+   command void Transport.initialize()
+   {
+      dbg(TRANSPORT_CHANNEL, "Initializing Transport Layer\n");
+      
+      for (i = 0; i < MAX_NUM_OF_SOCKETS; i++)
+      {
+         s = &socket;
+         s->RTT = 1 * i;
+         socketTable[i] = socket;
+      }
+
+      for (i = 0; i < MAX_NUM_OF_SOCKETS; i++)
+      {
+         s = &socketTable[i];
+         dbg(TRANSPORT_CHANNEL, "RTT of socket %d is %d\n", i, s->RTT);
+      }
    }
 }

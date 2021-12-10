@@ -155,7 +155,7 @@ def main():
     s.addChannel(s.ROUTING_CHANNEL)
     s.addChannel(s.TRANSPORT_CHANNEL)
 
-    # s.runTime(10)
+    s.runTime(1)
     # s.routeDMP(2)
     # s.runTime(1)
     # s.routeDMP(1)
@@ -163,11 +163,11 @@ def main():
     # s.ping(3, 7, "Hello!")
     # s.runTime(10)
 
-    s.runTime(10)
-    s.testServer(8, 40)
-    s.runTime(10)
-    s.testClient(4, 8, 40, 40, 80)
-    s.runTime(10)
+    # s.runTime(10)
+    # s.testServer(8, 40)
+    # s.runTime(10)
+    # s.testClient(4, 8, 40, 40, 80)
+    # s.runTime(10)
 
 if __name__ == '__main__':
     main()

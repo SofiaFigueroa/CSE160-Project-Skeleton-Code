@@ -56,6 +56,7 @@ implementation
       dbg(GENERAL_CHANNEL, "Booted\n");
 
       call NeighborTimer.startOneShot(500);
+      call Transport.initialize();
       
       // makePack(&sendPackage, TOS_NODE_ID, AM_BROADCAST_ADDR, TOS_NODE_ID, MAX_TTL, 0, 0, "ND_PACKET", PACKET_MAX_PAYLOAD_SIZE);
       // call NeighborDiscovery.discover(sendPackage);
@@ -198,7 +199,7 @@ implementation
    event void CommandHandler.setTestServer(uint16_t port)
    {
       dbg(TRANSPORT_CHANNEL, "Server Opened by %d, Awaiting on port %d\n", TOS_NODE_ID, port);
-      call Transport.initializeServer();
+      call Transport.initializeServer(TOS_NODE_ID, port);
    }
 
    event void CommandHandler.setTestClient(uint16_t destination, uint16_t srcPort, uint16_t destPort, uint16_t transfer)
