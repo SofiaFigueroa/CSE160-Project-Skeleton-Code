@@ -205,7 +205,7 @@ implementation
    event void CommandHandler.setTestClient(uint16_t destination, uint16_t srcPort, uint16_t destPort, uint16_t transfer)
    {
       dbg(TRANSPORT_CHANNEL, "Client at Node %d created. Dest: %d Source Port: %d Dest Port: %d Transfer: %d\n", TOS_NODE_ID, (uint16_t)destination, (uint16_t)srcPort, (uint16_t)destPort, (uint16_t)transfer);
-      call Transport.initializeClient();
+      call Transport.initializeClient(destination, srcPort, destPort, transfer);
    }
 
    event void CommandHandler.setAppServer()
