@@ -13,4 +13,7 @@ implementation
 
    components new TimerMilliC() as AcceptTimer;
    TransportP.AcceptTimer -> AcceptTimer;
+
+   components new TimerMilliC() as newTimer;
+   TransportP.newTimer -> newTimer;
 }

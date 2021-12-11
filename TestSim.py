@@ -152,7 +152,7 @@ def main():
 
     s.addChannel(s.COMMAND_CHANNEL)
     s.addChannel(s.GENERAL_CHANNEL)
-    s.addChannel(s.ROUTING_CHANNEL)
+    # s.addChannel(s.ROUTING_CHANNEL)
     s.addChannel(s.TRANSPORT_CHANNEL)
 
     s.runTime(1)
@@ -166,7 +166,7 @@ def main():
     s.runTime(10)
     s.testServer(8, 40)
     s.runTime(1)
-    s.testClient(5, 8, 40, 40, 80)
+    s.testClient(3, 8, 40, 40, 10)
     s.runTime(10)
     # s.routeDMP(5)
     s.runTime(10)
